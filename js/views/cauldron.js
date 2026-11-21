@@ -7,7 +7,7 @@ export async function render() {
   const pick = (old.length ? old : all)[Math.floor(Math.random() * (old.length || all.length))];
   $('#view').innerHTML = `<div class="wrap page">
     ${pageTop()}
-    ${pageTitle('Cauldron', '05', 'Brain bubbles', 'Drop a thought in the moment it arrives. Now and then an old one floats back up.')}
+    ${pageTitle('Cauldron', '05', 'Brain bubbles', 'Throw a thought in. It’ll float back up when you least expect it.')}
     <div class="stack" style="margin-top:22px">
       <textarea class="field" id="tt" rows="2" maxlength="500" placeholder="Something just occurred to me…"></textarea>
       <button class="btn" id="drop">Drop it in</button>

@@ -50,10 +50,10 @@ async function draw() {
 
   $('#view').innerHTML = `<div class="wrap wide page">
     ${pageTop()}
-    ${pageTitle('Days', '01', 'The bagel', 'A few taps a day. The year fills up with little creatures.')}
+    ${pageTitle('Days', '01', 'The bagel', 'Feed the bagel a seed a day. By December it’s crawling with creatures.')}
     <div class="yest">
       <span class="kicker" style="flex:none">Yesterday</span>
-      ${y && (y.tags.length || y.note) ? `<div class="tags">${y.tags.map(t => tagSVG(t, 34)).join('')}</div><span class="muted" style="font-size:14px">${esc(y.note || y.tags.map(t => LABEL[t]).join(', '))}</span>` : `<span class="muted" style="font-size:14px">Nothing written. That’s allowed.</span>`}
+      ${y && (y.tags.length || y.note) ? `<div class="tags">${y.tags.map(t => tagSVG(t, 34)).join('')}</div><span class="muted" style="font-size:14px">${esc(y.note || y.tags.map(t => LABEL[t]).join(', '))}</span>` : `<span class="muted" style="font-size:14px">The bagel went hungry. It forgives you.</span>`}
     </div>
 
     <div class="sec tight"><span>${isToday ? 'Today' : niceDate(editing, true)}</span>
@@ -61,11 +61,11 @@ async function draw() {
     ${groups.map(g => `<div class="taggrp"><div class="kicker">${g}</div><div class="tagrow">
       ${TAGS.filter(t => t.group === g).map(t => `<button class="tagbtn ${cur.tags.includes(t.id) ? 'on' : ''}" data-t="${t.id}">${tagSVG(t.id, 58)}<span>${esc(t.label)}</span></button>`).join('')}
     </div></div>`).join('')}
-    <input class="field" id="note" maxlength="140" placeholder="A few words, if you like" value="${esc(cur.note || '')}" style="margin-top:18px">
+    <input class="field" id="note" maxlength="140" placeholder="A few words for the bagel" value="${esc(cur.note || '')}" style="margin-top:18px">
 
     <div class="yearnav"><button class="round" id="py" aria-label="Previous year" style="${year <= START_YEAR ? 'visibility:hidden' : ''}">←</button><b>${year}</b><button class="round" id="ny" aria-label="Next year" style="${year >= new Date().getFullYear() ? 'visibility:hidden' : ''}">→</button></div>
     <div class="mural" id="mural">${MONTHS.map((m, i) => `<div class="month" data-m="${i}"><span class="ml">${String(i + 1).padStart(2, '0')} ${m} · <span class="cnt">0</span></span></div>`).join('')}</div>
-    <p class="note">Tap any creature to see its day.</p>
+    <p class="note">Poke a creature to see where it came from.</p>
   </div>`;
 
   const save = async () => {

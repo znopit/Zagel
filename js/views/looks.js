@@ -13,21 +13,24 @@ export async function render(id) {
   const boards = (await db.all('looks')).sort((a, b) => b.updated - a.updated);
   $('#view').innerHTML = `<div class="wrap wide page">
     ${pageTop()}
-    ${pageTitle('Looks', '04', 'Fashion studies', 'Each board asks one question. Lay pictures side by side and scribble on them with your Pencil.')}
+    ${pageTitle('Looks', '04', 'Fashion studies', 'Stare at clothes until they confess.')}
     <div class="row" style="margin-top:18px"><button class="btn" id="nb">New board</button></div>
     <div class="boards">${boards.map(b => `<div class="boardcard" data-id="${b.id}">
       <button class="th" data-open aria-label="Open board">${b.thumb ? `<img src="${blobURL(b.thumb)}" alt="">` : ''}</button>
       <div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start;margin-top:6px">
-        <div><span>${esc(b.question || 'Untitled')}</span><small class="muted">${niceDate(b.updated, true)}</small></div>
+        <div style="min-width:0;flex:1"><span class="bt" contenteditable="plaintext-only" spellcheck="false" data-ph="Untitled">${esc(b.question || '')}</span><small class="muted">${niceDate(b.updated, true)}</small></div>
         <button class="x" data-more aria-label="More">•••</button>
       </div></div>`).join('')}</div>
     ${boards.length ? '' : '<p class="empty">No boards yet.</p>'}
-    <p class="note" style="margin-top:28px">Inside a board: draw with Apple Pencil, move and pinch pictures with your fingers, tap with two fingers to show or hide the tools. Tap the title to rename it.</p>
+    <p class="note" style="margin-top:28px">Pencil draws. Fingers move and pinch. Two fingers tapped together summon the tools.</p>
   </div>`;
   $('#nb').onclick = async () => { const b = { id: uid(), question: '', items: [], strokes: [] }; await db.put('looks', b); location.hash = '#/looks/' + b.id; };
   $$('.boardcard').forEach(c => {
     $('[data-open]', c).onclick = () => { location.hash = '#/looks/' + c.dataset.id; };
     $('[data-more]', c).onclick = () => boardMenu(c.dataset.id);
+    const t = $('.bt', c);
+    t.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); t.blur(); } });
+    t.addEventListener('blur', async () => { const b = await db.get('looks', c.dataset.id); if (!b) return; b.question = t.textContent.trim(); await db.put('looks', b); });
   });
 }
 
@@ -76,6 +79,38 @@ function outline(st) {
   return d;
 }
 const layerOf = (st, n) => (st.above == null ? n : Math.min(st.above, n));
+let maskSeq = 0;
+// Build one ink layer: strokes in order; every eraser stroke masks whatever was drawn before it.
+function buildLayer(svg, strokes, k, n) {
+  svg.innerHTML = '';
+  let group = document.createElementNS(SVGNS, 'g');
+  const defs = document.createElementNS(SVGNS, 'defs');
+  svg.appendChild(defs);
+  for (const st of strokes) {
+    if (st.erase) {
+      if (!group.childNodes.length) continue;
+      const id = 'm' + (++maskSeq);
+      const mask = document.createElementNS(SVGNS, 'mask');
+      mask.setAttribute('id', id); mask.setAttribute('maskUnits', 'userSpaceOnUse');
+      mask.setAttribute('x', 0); mask.setAttribute('y', 0); mask.setAttribute('width', W); mask.setAttribute('height', H);
+      mask.innerHTML = `<rect width="${W}" height="${H}" fill="#fff"/>`;
+      const hole = document.createElementNS(SVGNS, 'path');
+      hole.setAttribute('d', outline(st)); hole.setAttribute('fill', '#000');
+      mask.appendChild(hole); defs.appendChild(mask);
+      (st._els = st._els || []).push(hole);
+      group.setAttribute('mask', `url(#${id})`);
+      const outer = document.createElementNS(SVGNS, 'g');
+      outer.appendChild(group); group = outer;
+      continue;
+    }
+    if (layerOf(st, n) !== k) continue;
+    const path = document.createElementNS(SVGNS, 'path');
+    path.setAttribute('d', outline(st)); path.setAttribute('fill', st.color);
+    st._el = path; group.appendChild(path);
+  }
+  svg.appendChild(group);
+  return group;
+}
 
 // ---------- studio ----------
 async function studio(id) {
@@ -85,13 +120,12 @@ async function studio(id) {
   const touchDevice = 'ontouchstart' in window;
   let color = COLORS[0], size = SIZES[1], tool = 'pen', sel = null, toolsOn = !touchDevice;
   const history = [];
-  const snap = () => { history.push(JSON.stringify({ items: board.items.map(i => ({ ...i, blob: undefined })), strokes: board.strokes })); if (history.length > 50) history.shift(); };
+  const snap = () => { history.push(JSON.stringify({ items: board.items.map(i => ({ ...i, blob: undefined })), strokes: board.strokes.map(({ _el, _els, ...r }) => r) })); if (history.length > 50) history.shift(); };
   const blobs = Object.fromEntries(board.items.filter(i => i.blob).map(i => [i.id, i.blob]));
 
   $('#view').innerHTML = `<div class="studio" id="studio">
     <div class="stage" id="stage" style="width:${W}px;height:${H}px">
       <div id="layers"></div>
-      <div class="q" id="q" contenteditable="plaintext-only" spellcheck="false" data-ph="Tap to name this board">${esc(board.question || '')}</div>
     </div>
     <button class="exit" id="exit" aria-label="Back to Looks">←</button>
     <div class="tools ${toolsOn ? '' : 'hide'}" id="tools">
@@ -108,7 +142,7 @@ async function studio(id) {
     </div>
     <div class="hint" id="hint">${touchDevice ? 'Tap with two fingers for tools' : 'Draw with the mouse · Move to arrange'}</div>
   </div>`;
-  const studioEl = $('#studio'), stage = $('#stage'), layers = $('#layers'), qEl = $('#q');
+  const studioEl = $('#studio'), stage = $('#stage'), layers = $('#layers');
   setTimeout(() => { const h = $('#hint'); if (h) h.style.opacity = 0; }, 2600);
 
   let s = 1, ox = 0, oy = 0;
@@ -147,12 +181,8 @@ async function studio(id) {
       if (k < n) want.push(itemEl(board.items[k]));
     }
     // fill ink layers
-    for (let k = 0; k < inkEls.length; k++) if (inkEls[k]) inkEls[k].innerHTML = '';
-    for (const st of board.strokes) {
-      const path = document.createElementNS(SVGNS, 'path');
-      path.setAttribute('d', outline(st)); path.setAttribute('fill', st.color);
-      st._el = path; inkLayer(layerOf(st, n)).appendChild(path);
-    }
+    board.strokes.forEach(st => { st._els = []; });
+    for (let k = 0; k <= n; k++) inkLayer(k)._top = buildLayer(inkLayer(k), board.strokes, k, n);
     // drop gone items, then order nodes (moving nodes never reloads pictures)
     const keep = new Set(board.items.map(i => i.id));
     for (const [k, el] of itemEls) if (!keep.has(k)) { el.remove(); itemEls.delete(k); }
@@ -163,11 +193,8 @@ async function studio(id) {
 
   let saveT = null;
   const save = () => { clearTimeout(saveT); saveT = setTimeout(() => { board.items.forEach(i => { if (blobs[i.id]) i.blob = blobs[i.id]; }); db.put('looks', strip(board)); }, 400); };
-  const strip = b => ({ ...b, strokes: b.strokes.map(({ _el, ...r }) => r) });
+  const strip = b => ({ ...b, strokes: b.strokes.map(({ _el, _els, ...r }) => r) });
 
-  // ----- title -----
-  qEl.addEventListener('input', () => { board.question = qEl.textContent.trim(); save(); });
-  qEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); qEl.blur(); } });
 
   // ----- pointers -----
   const pts = new Map();
@@ -183,22 +210,23 @@ async function studio(id) {
     }
     return null;
   }
-  const eraseR = () => size * 2.6 + 4;
   studioEl.addEventListener('pointerdown', e => {
     if (e.target.closest('#tools') || e.target.closest('#exit')) return;
-    if (e.target.closest('#q') && e.pointerType !== 'pen') return; // let the title take focus
-    if (document.activeElement === qEl) qEl.blur();
     studioEl.setPointerCapture(e.pointerId);
     const [x, y] = toBoard(e.clientX, e.clientY);
     pts.set(e.pointerId, { x, y, cx: e.clientX, cy: e.clientY, type: e.pointerType, t: Date.now() });
     const drawing = e.pointerType === 'pen' || (e.pointerType === 'mouse' && tool !== 'move');
     if (drawing) {
       snap();
-      if (tool === 'erase') { erase(x, y); stroke = { erase: true }; return; }
+      if (tool === 'erase') {
+        stroke = { erase: true, size: size * 3, pts: [[x, y, .72]] };
+        board.strokes.push(stroke); draw();
+        return;
+      }
       stroke = { color, size, pts: [[x, y, e.pressure || .5]], above: board.items.length };
       board.strokes.push(stroke);
       const path = document.createElementNS(SVGNS, 'path'); path.setAttribute('fill', color); path.setAttribute('d', outline(stroke));
-      stroke._el = path; inkLayer(board.items.length).appendChild(path);
+      stroke._el = path; (inkLayer(board.items.length)._top || inkLayer(board.items.length)).appendChild(path);
       return;
     }
     const touches = [...pts.values()].filter(p => p.type !== 'pen');
@@ -229,14 +257,15 @@ async function studio(id) {
     if (Math.hypot(e.clientX - p.cx, e.clientY - p.cy) > 10 && twoTap) twoTap.moved = true;
     p.x = x; p.y = y; p.cx = e.clientX; p.cy = e.clientY;
     if (stroke) {
-      if (stroke.erase) { erase(x, y); return; }
       const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
       for (const ev of evs) {
         const [bx, by] = toBoard(ev.clientX, ev.clientY);
         const last = stroke.pts[stroke.pts.length - 1];
-        if (Math.hypot(bx - last[0], by - last[1]) > 1.2) stroke.pts.push([bx, by, ev.pressure || .5]);
+        if (Math.hypot(bx - last[0], by - last[1]) > 1.2) stroke.pts.push([bx, by, stroke.erase ? .72 : (ev.pressure || .5)]);
       }
-      stroke._el.setAttribute('d', outline(stroke));
+      const d = outline(stroke);
+      if (stroke.erase) (stroke._els || []).forEach(h => h.setAttribute('d', d));
+      else stroke._el.setAttribute('d', d);
       return;
     }
     if (pinch) {
@@ -267,12 +296,6 @@ async function studio(id) {
   studioEl.addEventListener('pointercancel', end);
   studioEl.addEventListener('dblclick', e => { const [x, y] = toBoard(e.clientX, e.clientY); const it = itemAt(x, y); if (it && it.type === 'text') editText(it); });
 
-  function erase(x, y) {
-    const r = eraseR();
-    const before = board.strokes.length;
-    board.strokes = board.strokes.filter(st => !st.pts.some(([px, py]) => Math.hypot(px - x, py - y) < r + st.size / 2));
-    if (board.strokes.length !== before) { draw(); save(); }
-  }
   function toggleTools() { toolsOn = !toolsOn; $('#tools').classList.toggle('hide', !toolsOn); }
 
   // ----- tools -----
@@ -338,7 +361,6 @@ async function studio(id) {
     window.removeEventListener('zagel:leave', onLeave); removeEventListener('resize', fit);
     if (leaving) return; leaving = true;
     clearTimeout(saveT);
-    board.question = qEl.textContent.trim();
     board.items.forEach(i => { if (blobs[i.id]) i.blob = blobs[i.id]; });
     window.__lookSave = (async () => {
       const b = strip(board);
@@ -355,7 +377,17 @@ async function renderBoard(board, blobs, scale, fmt) {
   const x = c.getContext('2d'); x.scale(scale, scale);
   x.fillStyle = '#EEEBE3'; x.fillRect(0, 0, W, H);
   const items = board.items || [], strokes = board.strokes || [], n = items.length;
-  const ink = k => strokes.filter(st => layerOf(st, n) === k).forEach(st => { x.fillStyle = st.color; x.fill(new Path2D(outline(st))); });
+  const ink = k => {
+    const lc = document.createElement('canvas'); lc.width = W * scale; lc.height = H * scale;
+    const l = lc.getContext('2d'); l.scale(scale, scale);
+    let any = false;
+    for (const st of strokes) {
+      if (st.erase) { if (any) { l.globalCompositeOperation = 'destination-out'; l.fill(new Path2D(outline(st))); l.globalCompositeOperation = 'source-over'; } continue; }
+      if (layerOf(st, n) !== k) continue;
+      any = true; l.fillStyle = st.color; l.fill(new Path2D(outline(st)));
+    }
+    if (any) { x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(lc, 0, 0); x.restore(); }
+  };
   for (let k = 0; k <= n; k++) {
     ink(k);
     if (k === n) break;
@@ -375,6 +407,5 @@ async function renderBoard(board, blobs, scale, fmt) {
     }
     x.restore();
   }
-  if (board.question) { x.font = `600 44px 'Zagel Display', sans-serif`; x.fillStyle = '#141414'; x.textBaseline = 'top'; x.fillText(board.question, 48, 36); }
   return new Promise(r => c.toBlob(r, fmt === 'png' ? 'image/png' : 'image/jpeg', .9));
 }

@@ -41,7 +41,7 @@ export async function render() {
 
   $('#view').innerHTML = `<div class="wrap page">
     ${pageTop()}
-    ${pageTitle('Wishes', '03', 'One wish willow', 'One twig per wish. Leaves grow while it waits and turn yellow after thirty days. Snap the twig when it’s yours. No takebacks.')}
+    ${pageTitle('Wishes', '03', 'One wish willow', 'Plant a twig. Wait thirty days. Snap it when it’s yours. No takebacks.')}
     <div class="stack" style="margin-top:22px">
       <input class="field" id="wn" placeholder="What do you want?" maxlength="100">
       <input class="field" id="wp" placeholder="Price" maxlength="30">

@@ -38,9 +38,9 @@ img{display:block}
 .hero{position:relative;padding-top:12px}
 .portrait{position:relative;width:52%;margin-left:auto;margin-right:-4%;transform:rotate(4deg);z-index:3;margin-bottom:-11%;pointer-events:none}
 .portrait img{width:100%}
-.big{font-family:var(--display);font-weight:600;font-size:clamp(104px,30vw,190px);line-height:.82;letter-spacing:-0.065em;position:relative;z-index:1;white-space:nowrap}
+.big{font-family:var(--display);font-weight:600;font-size:clamp(104px,28vw,320px);line-height:.82;letter-spacing:-0.065em;position:relative;z-index:1;white-space:nowrap}
 .big .dash{display:inline-block;width:.32em;height:.07em;background:var(--ink);vertical-align:.24em;margin-left:.06em}
-.sub{position:relative;z-index:2;font-family:var(--display);font-weight:600;font-size:clamp(46px,13vw,84px);line-height:.95;letter-spacing:-0.055em;margin-top:clamp(14px,4.5vw,26px)}
+.sub{position:relative;z-index:2;font-family:var(--display);font-weight:600;font-size:clamp(52px,13vw,160px);line-height:.95;letter-spacing:-0.055em;margin-top:clamp(2px,1vw,12px)}
 .sub .g{color:#6E7279}.sub .z{color:var(--blue)}
 .lede{font-size:19px;line-height:1.45;margin-top:28px;max-width:30em}
 .note{font-size:15px;color:var(--muted);margin-top:14px}
@@ -73,7 +73,7 @@ body.night.onhome .roadbox{padding-top:120px}
 #walker-in{transform-box:fill-box;transform-origin:50% 100%}
 .walking #walker-in{animation:waddle .5s ease-in-out infinite alternate}
 @keyframes waddle{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
-.bubble{position:absolute;z-index:5;max-width:220px;background:#fff;color:#141414;border:1px solid #141414;border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:14px;line-height:1.4;box-shadow:0 6px 14px -8px rgba(0,0,0,.35);animation:rise .5s cubic-bezier(.2,1.4,.4,1);cursor:pointer}
+.bubble{position:absolute;z-index:5;max-width:220px;background:radial-gradient(circle at 16px 12px,rgba(255,255,255,.95) 0 3px,transparent 4px),rgba(214,228,245,.25);color:var(--ink);border:1px solid rgba(20,20,20,.55);border-radius:26px;-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);padding:10px 14px;font-size:14px;line-height:1.4;box-shadow:0 6px 14px -8px rgba(0,0,0,.35);animation:rise .5s cubic-bezier(.2,1.4,.4,1);cursor:pointer}
 .bubble small{display:block;color:#8A857A;font-size:11px;margin-top:4px;letter-spacing:.04em}
 .bubble.pop{animation:pop .25s forwards}
 @keyframes rise{from{transform:translateY(16px) scale(.6);opacity:0}to{transform:none;opacity:1}}
@@ -114,7 +114,7 @@ body.night .road [fill="#2A1A4C"]{fill:#9CCBF5}
 body.night .road [fill="#BFD6EC"]{fill:#1A1D33}
 body.night .road [fill="#F2C09A"]{fill:#12142A}
 body.night .road [fill="#F6DC92"]{fill:#FF7A3A}
-body.night .bubble{background:#151A33;color:#EEF0FF;border-color:#C6FF3D}
+body.night .bubble{background:radial-gradient(circle at 16px 12px,rgba(255,255,255,.9) 0 3px,transparent 4px),rgba(198,255,61,.08);color:#EEF0FF;border-color:#C6FF3D}
 
 /* pages */
 .page{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
@@ -182,9 +182,8 @@ textarea.field{resize:vertical;min-height:60px;line-height:1.5}
 @keyframes snap{30%{transform:rotate(-14deg)}60%{transform:rotate(10deg) translateY(4px)}}
 
 /* cauldron */
-.thought{position:relative;background:#fff;color:#141414;border-radius:22px;padding:14px 18px;margin:12px 0;max-width:92%;border:1px solid var(--ink)}
-.thought:nth-child(even){margin-left:auto;border-radius:22px 22px 6px 22px}
-.thought:nth-child(odd){border-radius:22px 22px 22px 6px}
+.thought{position:relative;background:radial-gradient(circle at 18px 14px,rgba(255,255,255,.95) 0 3px,transparent 4px),radial-gradient(circle at 30% 20%,rgba(255,255,255,.35),transparent 60%),rgba(214,228,245,.18);color:var(--ink);border-radius:30px;padding:16px 22px;margin:14px 0;max-width:92%;border:1px solid rgba(20,20,20,.55);box-shadow:inset -6px -8px 14px rgba(120,150,200,.12)}
+.thought:nth-child(even){margin-left:auto}
 .thought small{display:block;color:#8A857A;font-size:11px;margin-top:6px}
 .surface{border:1px dashed var(--ink);padding:16px;margin-top:22px;border-radius:24px}
 
@@ -225,7 +224,10 @@ body.riso .btn.ghost{background:transparent;color:#F3EEF8;border-color:#F3EEF8}
 .boardcard .th{display:block;width:100%;padding:0;cursor:pointer}
 .boardcard .th{aspect-ratio:1366/1024;background:var(--paper-2);border:1px solid var(--hair);overflow:hidden}
 .boardcard .th img{width:100%;height:100%;object-fit:cover}
-.boardcard span{display:block;font-family:var(--display);font-weight:500;font-size:16px;margin-top:6px;letter-spacing:-0.02em}
+.boardcard .bt{display:block;font-family:var(--display);font-weight:500;font-size:17px;letter-spacing:-0.02em;outline:none;min-height:24px;-webkit-user-select:text;user-select:text;border-bottom:1px dashed transparent}
+.boardcard .bt:focus{border-bottom-color:var(--ink)}
+.boardcard .bt:empty:before{content:attr(data-ph);color:var(--faint)}
+.boardcard small{display:block}
 .studio{position:fixed;inset:0;background:var(--paper);z-index:50;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .stage{position:absolute;left:0;top:0;transform-origin:0 0;background:#EEEBE3}
 .stage .it{position:absolute;left:0;top:0;transform-origin:50% 50%}
@@ -260,14 +262,15 @@ body.riso .btn.ghost{background:transparent;color:#F3EEF8;border-color:#F3EEF8}
 .totop.show{opacity:1;pointer-events:auto}
 .studio ~ .totop,body:has(.studio) .totop{display:none}
 
-/* iPad landscape and wider: hero stays put on the left, the road scrolls on the right */
+/* iPad landscape and wider: the same single road, scaled up to fill the screen */
 @media (min-width:900px){
-  .homewrap{max-width:1180px}
-  .homegrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:56px;align-items:start}
-  .homegrid .hero{position:sticky;top:20px;padding-top:40px}
-  .homegrid .big{font-size:clamp(110px,12.5vw,190px)}
-  .homegrid .sub{font-size:clamp(52px,6vw,90px)}
-  .homegrid .portrait{width:58%}
-  .homegrid .sec{margin-top:24px}
+  .homewrap{max-width:none;padding-left:max(40px,env(safe-area-inset-left));padding-right:max(40px,env(safe-area-inset-right))}
+  .homewrap .big{font-size:21vw}
+  .homewrap .sub{font-size:10vw}
+  .homewrap .portrait{width:42%;margin-right:2%;margin-bottom:-9%}
+  .homewrap .lede{font-size:clamp(19px,2.1vw,30px);max-width:38em}
+  .homewrap .note{font-size:clamp(15px,1.5vw,20px)}
+  .homewrap .sec{font-size:clamp(15px,1.4vw,20px)}
   .wrap.page:not(.wide){max-width:760px}
+}
 }

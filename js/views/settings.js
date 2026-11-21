@@ -25,7 +25,7 @@ const HOUSE = `<svg class="dh" viewBox="200 20 400 420" role="img" aria-label="T
 <g font-size="12" font-weight="500" fill="#141414" style="pointer-events:none">
  <text x="410" y="91" text-anchor="middle">Zagel</text>
  <text x="266" y="152">Backup</text><text x="554" y="152" text-anchor="end">Restore</text>
- <text x="266" y="294">Send to iPad</text><text x="554" y="294" text-anchor="end">Night</text>
+ <text x="266" y="294">Teleport</text><text x="554" y="294" text-anchor="end">Night</text>
 </g></svg>`;
 
 export async function render() {
@@ -38,7 +38,7 @@ export async function render() {
     ${pageTitle('Home', '', 'Everything stays home', 'Juno and Jupiter keep watch. Tap a room.')}
     ${HOUSE}
     <p class="note" style="text-align:center">${usage} ${persisted ? 'Your browser has promised to keep it.' : ''}</p>
-    <p class="note">Nothing ever leaves your phone or iPad unless you send it yourself. If you delete the app or clear Safari’s website data, it’s gone — so take a backup now and then.</p>
+    <p class="note">Everything lives only on this device. Delete the app or clear Safari’s data and it’s gone — bottle up a backup now and then, the cats can’t help you.</p>
   </div>`;
   $$('.room').forEach(r => r.onclick = () => ROOMS[r.dataset.room]());
 }
@@ -47,11 +47,11 @@ async function backup(send) {
   toast('Packing everything up…', 1500);
   const blob = await exportAll();
   await setMeta('lastBackup', Date.now());
-  await shareOrDownload(blob, `zagel-${dayKey()}.json`, send ? 'Zagel for iPad' : 'Zagel backup');
+  await shareOrDownload(blob, `zagel-${dayKey()}.json`, send ? 'Zagel teleport' : 'Zagel backup');
 }
 
 const ROOMS = {
-  backup: () => openSheet(`${sheetHead('Backup')}<p class="intro">One file with everything in it — days, wishes, boards, books, photos. Save it to Files or iCloud Drive.</p>
+  backup: () => openSheet(`${sheetHead('Backup')}<p class="intro">Bottle everything up in one file — days, wishes, boards, books, photos. Keep it in Files or iCloud Drive.</p>
     <div class="row" style="margin-top:18px"><button class="btn" id="bk">Make a backup</button></div>`, el => { $('#bk', el).onclick = () => backup(false); }),
   restore: () => openSheet(`${sheetHead('Restore')}<p class="intro">Open a Zagel backup file. Anything new is added; anything you already have stays, unless the file has a newer version of it. Nothing gets wiped.</p>
     <div class="row" style="margin-top:18px"><label class="btn filebtn">Choose a backup file<input type="file" id="rf" accept="application/json,.json"></label></div>`, el => {
@@ -61,8 +61,8 @@ const ROOMS = {
       catch (err) { toast(err.message || 'Couldn’t read that file.', 3200); }
     };
   }),
-  send: () => openSheet(`${sheetHead('Send to iPad')}<p class="intro">Makes a backup and opens the share sheet. Choose AirDrop and your iPad. On the iPad, save the file, then open Zagel → Home → Restore and pick it. Works the other way round too.</p>
-    <div class="row" style="margin-top:18px"><button class="btn" id="sd">Send</button></div>`, el => { $('#sd', el).onclick = () => backup(true); }),
+  send: () => openSheet(`${sheetHead('Teleport')}<p class="intro">A teleport spell for your other iPhone or iPad. Everything gets bottled into one file and sent by AirDrop. On the other side, save it, open Zagel → Home → Restore, and pick the file. Works in every direction.</p>
+    <div class="row" style="margin-top:18px"><button class="btn" id="sd">Cast it</button></div>`, el => { $('#sd', el).onclick = () => backup(true); }),
   night: () => {
     let saved = null; try { saved = localStorage.getItem('zagel-mode'); } catch (e) {}
     const cur = saved || 'auto';

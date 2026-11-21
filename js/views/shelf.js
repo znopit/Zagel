@@ -19,7 +19,7 @@ export async function render() {
 
   $('#view').innerHTML = `<div class="wrap wide page">
     ${pageTop()}
-    ${pageTitle('Shelf', '06', 'Picture books', 'Every book is a spine in its cover’s colour. Pull one out, read it, keep the page you’d steal.')}
+    ${pageTitle('Shelf', '06', 'Picture books', 'Pull one out. Steal a page. Nobody has to know.')}
     <div class="row" style="margin-top:18px">
       <button class="btn" id="add">Add a book</button>
       <button class="btn ghost" id="pull" ${unread ? '' : 'disabled'}>Pull one</button>

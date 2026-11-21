@@ -132,8 +132,8 @@ export const LOGO = `<svg viewBox="0 0 28 28" aria-hidden="true"><ellipse cx="14
 export function pageTop(extra = '') {
   return `<header class="top"><a class="logo" href="#/" data-home>${LOGO} Zagel</a><div class="row" style="gap:10px;flex-wrap:nowrap">${extra}<button class="btn" type="button" data-menu>Menu <span aria-hidden="true">≡</span></button></div></header>`;
 }
-// Menu in the order Zoi actually uses things.
-const MENU = [['days', 'Days'], ['looks', 'Looks'], ['shelf', 'Shelf'], ['wishes', 'Wishes'], ['hat', 'Party Hat'], ['cauldron', 'Cauldron'], ['grimoire', 'Grimoire'], ['home', 'Home']];
+// Menu follows the road.
+const MENU = [['days', 'Days'], ['hat', 'Party Hat'], ['wishes', 'Wishes'], ['looks', 'Looks'], ['cauldron', 'Cauldron'], ['shelf', 'Shelf'], ['grimoire', 'Grimoire'], ['home', 'Home']];
 export function openMenu() {
   const here = location.hash.replace(/^#\/?/, '').split('/')[0];
   openSheet(`${sheetHead('Down the road')}

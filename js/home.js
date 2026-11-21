@@ -4,6 +4,8 @@ import { $, $$, esc, niceDate, pageTop } from './ui.js';
 
 export const MODE_BTN = `<button class="round mode" type="button" aria-label="Switch to night"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="moon" d="M15.5 3.5a8.5 8.5 0 1 0 5 13.5 7 7 0 1 1 -5 -13.5z"/><g class="sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g></svg></button>`;
 
+const ROUTE = { days: 'days', hat: 'hat', wishes: 'wishes', looks: 'looks', cauldron: 'cauldron', shelf: 'shelf', grimoire: 'grimoire', home: 'home' };
+
 let cleanup = [];
 export async function renderHome() {
   cleanup.forEach(f => f()); cleanup = [];
@@ -15,8 +17,8 @@ export async function renderHome() {
         <div class="portrait"><img src="img/zoi.png" alt="Zoi's self-portrait: blue hair, yellow party hat with two cats"></div>
         <div class="big">Zagel<span class="dash"></span></div>
         <div class="sub"><span class="g">about</span> <span class="z">Zoi</span></div>
-        <p class="lede">Everything on a bagel: days, wishes, small parties, loose thoughts, and the books still waiting on the shelf.</p>
-        <p class="note">Kept offline, on this device.</p>
+        <p class="lede">One day, Zoi the witch put everything on a bagel — her days, her wishes, her loose thoughts, two cats and a shelf of unread books — and set off down the witches’ road.</p>
+        <p class="note">Kept offline, on this device. Nobody else was invited.</p>
       </section>
       <div class="roadcol">
         <div class="sec"><span>Down the road</span><span>(07)</span></div>
