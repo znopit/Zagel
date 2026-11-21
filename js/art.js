@@ -226,7 +226,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
 </g></g>
 </g></g>
       <text class="lt" x="-65" y="98">Days<tspan class="n" dx="3" dy="-11">01</tspan></text>
-      <text class="ld" x="-65" y="117">One seed a day.</text>
+      <text class="ld" x="-65" y="116"><tspan class="ldt">Days</tspan>, 2026.<tspan x="-65" dy="12.5">Bagel, sesame, poppy seed.</tspan><tspan x="-65" dy="12.5">365 seeds, ongoing.</tspan></text>
     </g>
 
     <!-- 02 Party Hat -->
@@ -265,7 +265,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
 </g></g>
 </g></g>
       <text class="lt" x="-60" y="98">Party Hat<tspan class="n" dx="3" dy="-11">02</tspan></text>
-      <text class="ld" x="-60" y="117">Put it on yourself.</text>
+      <text class="ld" x="-60" y="116"><tspan class="ldt">Party Hat</tspan>, 2026.<tspan x="-60" dy="12.5">Paper, glue, one envelope,</tspan><tspan x="-60" dy="12.5">a cat who wasn’t invited.</tspan></text>
     </g>
 
     <!-- 03 Wishes : willow -->
@@ -286,7 +286,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <g class="eyes" stroke="#2E2C29" stroke-width="1.2"><circle cx="-8" cy="4" r="7" fill="#fff"/><circle cx="9" cy="4" r="7" fill="#fff"/><circle cx="-7" cy="1" r="2.8" fill="#141414" stroke="none"/><circle cx="10" cy="1" r="2.8" fill="#141414" stroke="none"/></g>
       </g></g>
       <text class="lt" x="-65" y="98">Wishes<tspan class="n" dx="3" dy="-11">03</tspan></text>
-      <text class="ld" x="-65" y="117">Snap when it comes true.</text>
+      <text class="ld" x="-65" y="116"><tspan class="ldt">Wishes</tspan>, 2026.<tspan x="-65" dy="12.5">Willow twig, patience.</tspan><tspan x="-65" dy="12.5">No takebacks.</tspan></text>
     </g>
 
     <!-- 04 Looks : CDG dress -->
@@ -304,7 +304,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <g class="eyes"><circle cx="-9" cy="-4" r="7.5" fill="#fff"/><circle cx="10" cy="-4" r="7.5" fill="#fff"/><circle cx="-12" cy="-3" r="3" fill="#141414" stroke="none"/><circle cx="7" cy="-3" r="3" fill="#141414" stroke="none"/></g>
       </g></g>
       <text class="lt" x="-60" y="98">Looks<tspan class="n" dx="3" dy="-11">04</tspan></text>
-      <text class="ld" x="-60" y="117">Study, then scribble.</text>
+      <text class="ld" x="-60" y="116"><tspan class="ldt">Looks</tspan>, 2026.<tspan x="-60" dy="12.5">Black cotton, one big bow,</tspan><tspan x="-60" dy="12.5">strong opinions.</tspan></text>
     </g>
 
     <!-- 05 Cauldron -->
@@ -330,7 +330,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <g class="eyes"><circle cx="-14" cy="10" r="8" fill="#fff"/><circle cx="14" cy="10" r="8" fill="#fff"/><circle cx="-12" cy="6" r="3.2" fill="#141414" stroke="none"/><circle cx="16" cy="6" r="3.2" fill="#141414" stroke="none"/></g>
       </g></g>
       <text class="lt" x="-65" y="98">Cauldron<tspan class="n" dx="3" dy="-11">05</tspan></text>
-      <text class="ld" x="-65" y="117">Loose thoughts, bubbling.</text>
+      <text class="ld" x="-65" y="116"><tspan class="ldt">Cauldron</tspan>, 2026.<tspan x="-65" dy="12.5">Cast iron, striped socks,</tspan><tspan x="-65" dy="12.5">loose thoughts. Still bubbling.</tspan></text>
     </g>
 
     <!-- 06 Shelf -->
@@ -351,7 +351,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <g class="eyes"><circle cx="-7" cy="-68" r="6" fill="#fff"/><circle cx="9" cy="-68" r="6" fill="#fff"/><circle cx="-9" cy="-66" r="2.5" fill="#141414" stroke="none"/><circle cx="7" cy="-66" r="2.5" fill="#141414" stroke="none"/></g>
       </g></g>
       <text class="lt" x="-60" y="98">Shelf<tspan class="n" dx="3" dy="-11">06</tspan></text>
-      <text class="ld" x="-60" y="117">Read the unread.</text>
+      <text class="ld" x="-60" y="116"><tspan class="ldt">Shelf</tspan>, 2026.<tspan x="-60" dy="12.5">Oak, picture books,</tspan><tspan x="-60" dy="12.5">most of them unread.</tspan></text>
     </g>
 
     <!-- 07 Grimoire : riso -->
@@ -371,7 +371,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <path d="M-22 30 l1.5 4 l4 0 l-3 2.5 l1 4 l-3.5 -2.5 l-3.5 2.5 l1 -4 l-3 -2.5 l4 0 z" fill="#F3EEF8"/>
       </g></g>
       <text class="lt" x="-65" y="98">Grimoire<tspan class="n" dx="3" dy="-11">07</tspan></text>
-      <text class="ld" x="-65" y="117">Audentes fortuna iuvat.</text>
+      <text class="ld" x="-65" y="116"><tspan class="ldt">Grimoire</tspan>, 2026.<tspan x="-65" dy="12.5">Ink, one eye, one wing.</tspan><tspan x="-65" dy="12.5">Kept by Zi.</tspan></text>
     </g>
 
     <!-- Home : house + Juno + Jupiter -->
@@ -399,7 +399,7 @@ export const ROAD = `<svg class="road" viewBox="0 0 400 1490" role="img" aria-la
         <path d="M-108 34 q2 -2 4 0" fill="none" stroke-width="1"/>
       </g></g>
       <text class="lt" x="0" y="112" text-anchor="middle">Home</text>
-      <text class="ld" x="0" y="132" text-anchor="middle">Everything stays home. Juno and Jupiter keep watch.</text>
+      <text class="ld" x="0" y="132" text-anchor="middle"><tspan class="ldt">Home</tspan>, 2026.<tspan x="0" dy="12.5">Cardboard, two cats, lights left on.</tspan></text>
     </g>
     <g class="river" filter="url(#pencil)"><path class="rv rv0" transform="translate(-15 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#2340E8" stroke-width="4" stroke-linecap="round"/><path class="rv rv1" transform="translate(-10 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#1FA58A" stroke-width="5" stroke-linecap="round"/><path class="rv rv2" transform="translate(-5 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#C6FF3D" stroke-width="5.5" stroke-linecap="round"/><path class="rv rv3" transform="translate(0 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#F2C230" stroke-width="6" stroke-linecap="round"/><path class="rv rv4" transform="translate(5 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#F07A2A" stroke-width="5.5" stroke-linecap="round"/><path class="rv rv5" transform="translate(10 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#E03A2A" stroke-width="5" stroke-linecap="round"/><path class="rv rv6" transform="translate(15 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#2340E8" stroke-width="4" stroke-linecap="round"/><path class="rvs" transform="translate(-4 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#FFF7C2" stroke-width="2.2" stroke-linecap="round" opacity=".8"/><path class="rvs rvs2" transform="translate(7 0)" d="M200 0 C200 70,172 80,172 140 S228 250,228 310 S172 420,172 480 S228 590,228 650 S172 760,172 820 S228 930,228 990 S172 1100,172 1160 S200 1240,200 1282" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity=".6"/></g><g id="walker"><g id="walker-in"><use href="#zoi-body" transform="translate(0 -26) scale(.42)"/></g></g><circle class="ff" cx="40" cy="60" r="2.2" style="animation-delay:0s"/><circle class="ff" cx="350" cy="190" r="2.2" style="animation-delay:0.8s"/><circle class="ff" cx="250" cy="420" r="2.2" style="animation-delay:1.6s"/><circle class="ff" cx="30" cy="560" r="2.2" style="animation-delay:0.4s"/><circle class="ff" cx="360" cy="740" r="2.2" style="animation-delay:2.1s"/><circle class="ff" cx="220" cy="880" r="2.2" style="animation-delay:1.2s"/><circle class="ff" cx="20" cy="1010" r="2.2" style="animation-delay:2.6s"/><circle class="ff" cx="330" cy="1180" r="2.2" style="animation-delay:0.6s"/><circle class="ff" cx="60" cy="1250" r="2.2" style="animation-delay:1.9s"/><circle class="ff" cx="300" cy="1400" r="2.2" style="animation-delay:1s"/>
   </svg>`;

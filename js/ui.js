@@ -128,8 +128,17 @@ export function niceDate(d, withYear = false) {
 export function daysSince(ts) { return Math.floor((Date.now() - ts) / 86400000); }
 
 // ----- page chrome -----
-export function pageTop(right = '') {
-  return `<div class="top"><a class="back" href="#/">← Road</a>${right}</div>`;
+export const LOGO = `<svg viewBox="0 0 28 28" aria-hidden="true"><ellipse cx="14" cy="14" rx="12.5" ry="11" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="14" cy="15.5" rx="4" ry="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="9" cy="8.5" rx="1.4" ry=".7" fill="currentColor"/><ellipse cx="20" cy="10" rx="1.4" ry=".7" fill="currentColor" transform="rotate(30 20 10)"/></svg>`;
+export function pageTop(extra = '') {
+  return `<header class="top"><a class="logo" href="#/" data-home>${LOGO} Zagel</a><div class="row" style="gap:10px;flex-wrap:nowrap">${extra}<button class="btn" type="button" data-menu>Menu <span aria-hidden="true">≡</span></button></div></header>`;
+}
+// Menu in the order Zoi actually uses things.
+const MENU = [['days', 'Days'], ['looks', 'Looks'], ['shelf', 'Shelf'], ['wishes', 'Wishes'], ['hat', 'Party Hat'], ['cauldron', 'Cauldron'], ['grimoire', 'Grimoire'], ['home', 'Home']];
+export function openMenu() {
+  const here = location.hash.replace(/^#\/?/, '').split('/')[0];
+  openSheet(`${sheetHead('Down the road')}
+    <nav class="menu-list">${MENU.map(([k, t]) => `<a href="#/${k}" class="${k === here ? 'here' : ''}">${t}</a>`).join('')}</nav>
+    <p class="note" style="margin-top:24px">Kept offline, on this device.</p>`);
 }
 export function pageTitle(title, n, kicker, intro) {
   return `${kicker ? `<div class="kicker" style="margin-top:18px">${esc(kicker)}</div>` : ''}

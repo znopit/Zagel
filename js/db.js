@@ -32,17 +32,42 @@ function tx(store, mode, fn) {
   }));
 }
 
+// Safari can lose track of Blobs stored in IndexedDB ("WebKitBlobResource error"),
+// so pictures are stored as raw bytes and turned back into fresh in-memory Blobs on read.
+async function pack(v) {
+  if (v instanceof Blob) return { __ab: await v.arrayBuffer(), __type: v.type };
+  if (Array.isArray(v)) return Promise.all(v.map(pack));
+  if (v && typeof v === 'object' && !(v instanceof ArrayBuffer)) {
+    const o = {};
+    for (const k of Object.keys(v)) o[k] = await pack(v[k]);
+    return o;
+  }
+  return v;
+}
+function unpack(v) {
+  if (v && typeof v === 'object' && v.__ab instanceof ArrayBuffer) return new Blob([v.__ab], { type: v.__type || '' });
+  if (Array.isArray(v)) return v.map(unpack);
+  if (v && typeof v === 'object' && !(v instanceof Blob) && !(v instanceof ArrayBuffer)) {
+    const o = {};
+    for (const k of Object.keys(v)) o[k] = unpack(v[k]);
+    return o;
+  }
+  return v;
+}
+
 function reqP(r) { return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
 
 export const db = {
-  async get(store, id) { return tx(store, 'readonly', s => reqP(s.get(id))); },
-  async all(store) { return tx(store, 'readonly', s => reqP(s.getAll())); },
+  async get(store, id) { return unpack(await tx(store, 'readonly', s => reqP(s.get(id)))); },
+  async all(store) { return unpack(await tx(store, 'readonly', s => reqP(s.getAll()))); },
   async put(store, obj) {
     obj.updated = Date.now();
     if (!obj.created) obj.created = obj.updated;
-    await tx(store, 'readwrite', s => reqP(s.put(obj)));
+    const packed = await pack(obj);
+    await tx(store, 'readwrite', s => reqP(s.put(packed)));
     return obj;
   },
+  async raw(store, obj) { const packed = await pack(obj); return tx(store, 'readwrite', s => reqP(s.put(packed))); },
   async del(store, id) { return tx(store, 'readwrite', s => reqP(s.delete(id))); },
   async clear(store) { return tx(store, 'readwrite', s => reqP(s.clear())); },
 };
@@ -104,8 +129,8 @@ export async function importAll(file) {
     for (const raw of rows) {
       const row = await decode(raw);
       const cur = await db.get(s, row.id);
-      if (!cur) { await tx(s, 'readwrite', st => reqP(st.put(row))); added++; }
-      else if ((row.updated || 0) > (cur.updated || 0)) { await tx(s, 'readwrite', st => reqP(st.put(row))); updated++; }
+      if (!cur) { await db.raw(s, row); added++; }
+      else if ((row.updated || 0) > (cur.updated || 0)) { await db.raw(s, row); updated++; }
     }
   }
   return { added, updated };

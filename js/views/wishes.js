@@ -32,7 +32,6 @@ export async function render() {
       <div class="grow" style="flex:1;min-width:0">
         <h3 style="font-family:var(--display);font-weight:500;font-size:22px;letter-spacing:-0.03em;line-height:1.15">${esc(w.name)}</h3>
         <p class="muted" style="font-size:14px">${[w.price ? esc(w.price) : '', w.status === 'snapped' ? `Came true ${niceDate(w.snappedAt, true)}` : w.status === 'gone' ? 'Let go' : `${d} ${d === 1 ? 'day' : 'days'} on the willow${ripe ? ' · ripe' : ''}`].filter(Boolean).join(' · ')}</p>
-        ${w.link ? `<a href="${esc(w.link)}" target="_blank" rel="noopener" style="font-size:14px;color:inherit">Link ↗</a>` : ''}
         ${asking ? `<p style="margin-top:10px;font-size:15px">Thirty days later — still want it?</p><div class="row" style="margin-top:8px"><button class="btn small" data-keep>Yes, still</button><button class="btn small ghost" data-go>Let it go</button></div>` : ''}
         ${w.status === 'waiting' ? `<div class="row" style="margin-top:10px"><button class="btn small" data-snap>Snap · it’s mine</button></div>` : ''}
       </div>
@@ -45,7 +44,7 @@ export async function render() {
     ${pageTitle('Wishes', '03', 'One wish willow', 'One twig per wish. Leaves grow while it waits and turn yellow after thirty days. Snap the twig when it’s yours. No takebacks.')}
     <div class="stack" style="margin-top:22px">
       <input class="field" id="wn" placeholder="What do you want?" maxlength="100">
-      <div class="row"><input class="field" id="wp" placeholder="Price" style="flex:1;min-width:120px" maxlength="30"><input class="field" id="wl" placeholder="Link" style="flex:2;min-width:160px" inputmode="url"></div>
+      <input class="field" id="wp" placeholder="Price" maxlength="30">
       <div class="row"><label class="btn ghost filebtn">Add a photo<input type="file" id="wf" accept="image/*"></label><span class="muted" id="wfn" style="font-size:14px"></span></div>
       <button class="btn" id="add">Plant a twig</button>
     </div>
@@ -62,9 +61,7 @@ export async function render() {
   $('#add').onclick = async () => {
     const name = $('#wn').value.trim();
     if (!name) { $('#wn').focus(); return; }
-    let link = $('#wl').value.trim();
-    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
-    await db.put('wishes', { id: uid(), name, price: $('#wp').value.trim(), link, img: photo, status: 'waiting' });
+    await db.put('wishes', { id: uid(), name, price: $('#wp').value.trim(), img: photo, status: 'waiting' });
     render();
   };
   $$('.wish').forEach(el => {

@@ -1,5 +1,5 @@
 import { DEFS } from './art.js';
-import { closeSheet } from './ui.js';
+import { closeSheet, openMenu } from './ui.js';
 import { renderHome } from './home.js';
 
 document.getElementById('defs').innerHTML = DEFS;
@@ -28,7 +28,19 @@ try { saved = localStorage.getItem('zagel-mode'); } catch (e) {}
 setNight(saved ? saved === 'night' : new Date().getHours() < 6, false);
 document.addEventListener('click', e => {
   if (e.target.closest('.mode')) setNight(!isNight(), true);
+  if (e.target.closest('[data-menu]')) openMenu();
+  if (e.target.closest('[data-home]')) {
+    window.__roadY = 0;
+    if (!location.hash || location.hash === '#/') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  }
 });
+
+// back to top
+const up = document.createElement('button');
+up.className = 'totop'; up.type = 'button'; up.setAttribute('aria-label', 'Back to top'); up.innerHTML = '↑';
+document.body.appendChild(up);
+up.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+window.addEventListener('scroll', () => up.classList.toggle('show', scrollY > 700), { passive: true });
 
 // ----- routes -----
 const routes = {

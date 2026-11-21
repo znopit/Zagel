@@ -30,6 +30,7 @@ function spriteURL(id) {
 function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
 
+const START_YEAR = 2026;
 let editing = dayKey();
 let year = new Date().getFullYear();
 
@@ -56,13 +57,13 @@ async function draw() {
     </div>
 
     <div class="sec tight"><span>${isToday ? 'Today' : niceDate(editing, true)}</span>
-      <label class="kicker" style="cursor:pointer">Another day <input type="date" id="pick" value="${editing}" max="${dayKey()}" style="opacity:0;width:1px;height:1px;position:absolute"></label></div>
+      <label class="kicker" style="cursor:pointer">Another day <input type="date" id="pick" value="${editing}" min="2026-01-01" max="${dayKey()}" style="opacity:0;width:1px;height:1px;position:absolute"></label></div>
     ${groups.map(g => `<div class="taggrp"><div class="kicker">${g}</div><div class="tagrow">
       ${TAGS.filter(t => t.group === g).map(t => `<button class="tagbtn ${cur.tags.includes(t.id) ? 'on' : ''}" data-t="${t.id}">${tagSVG(t.id, 58)}<span>${esc(t.label)}</span></button>`).join('')}
     </div></div>`).join('')}
     <input class="field" id="note" maxlength="140" placeholder="A few words, if you like" value="${esc(cur.note || '')}" style="margin-top:18px">
 
-    <div class="yearnav"><button class="round" id="py" aria-label="Previous year">←</button><b>${year}</b><button class="round" id="ny" aria-label="Next year">→</button></div>
+    <div class="yearnav"><button class="round" id="py" aria-label="Previous year" style="${year <= START_YEAR ? 'visibility:hidden' : ''}">←</button><b>${year}</b><button class="round" id="ny" aria-label="Next year" style="${year >= new Date().getFullYear() ? 'visibility:hidden' : ''}">→</button></div>
     <div class="mural" id="mural">${MONTHS.map((m, i) => `<div class="month" data-m="${i}"><span class="ml">${String(i + 1).padStart(2, '0')} ${m} · <span class="cnt">0</span></span></div>`).join('')}</div>
     <p class="note">Tap any creature to see its day.</p>
   </div>`;
@@ -79,8 +80,8 @@ async function draw() {
   $('#note').addEventListener('change', save);
   $('#pick').addEventListener('change', e => { if (e.target.value) { editing = e.target.value; draw(); } });
   $('.sec label').onclick = () => { const p = $('#pick'); if (p.showPicker) { try { p.showPicker(); } catch (e) {} } };
-  $('#py').onclick = () => { year--; draw(); };
-  $('#ny').onclick = () => { year++; draw(); };
+  $('#py').onclick = () => { if (year > START_YEAR) { year--; draw(); } };
+  $('#ny').onclick = () => { if (year < new Date().getFullYear()) { year++; draw(); } };
   mural(byKey);
 }
 
