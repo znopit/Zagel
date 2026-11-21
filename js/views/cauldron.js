@@ -8,10 +8,7 @@ export async function render() {
   $('#view').innerHTML = `<div class="wrap page">
     ${pageTop()}
     ${pageTitle('Cauldron', '05', 'Brain bubbles', 'Throw a thought in. It’ll float back up when you least expect it.')}
-    <div class="stack" style="margin-top:22px">
-      <textarea class="field" id="tt" rows="2" maxlength="300" placeholder="Something just occurred to me…"></textarea>
-      <button class="btn" id="drop">Drop it in</button>
-    </div>
+    <div class="row" style="margin-top:22px"><button class="btn" id="throwin">Throw a thought in</button></div>
     <div class="sec"><span>In the pot</span><span>(${all.length})</span></div>
     <div class="froth" id="pot">${all.map(t => {
       const r = rnd(t.id), len = t.text.length;
@@ -19,13 +16,19 @@ export async function render() {
       return `<button class="soap" data-id="${t.id}" style="--d:${d}px;--dl:${(-r() * 6).toFixed(2)}s;--du:${(5 + r() * 4).toFixed(2)}s;--dx:${((r() - .5) * 14).toFixed(1)}px;margin-top:${Math.round(r() * 22)}px"><span class="st">${esc(t.text)}</span></button>`;
     }).join('') || '<p class="empty">The pot is empty. Throw something in.</p>'}</div>
   </div>`;
-  const drop = async () => {
-    const text = $('#tt').value.trim();
-    if (!text) { $('#tt').focus(); return; }
-    await db.put('thoughts', { id: uid(), text });
-    render();
-  };
-  $('#drop').onclick = drop;
+  $('#throwin').onclick = () => openSheet(`${sheetHead('Into the pot')}
+    <div class="stack">
+      <textarea class="field" id="tt" rows="3" maxlength="300" placeholder="Something just occurred to me…"></textarea>
+      <button class="btn" id="drop">Drop it in</button>
+    </div>`, el => {
+    $('#drop', el).onclick = async () => {
+      const text = $('#tt', el).value.trim();
+      if (!text) { $('#tt', el).focus(); return; }
+      await db.put('thoughts', { id: uid(), text });
+      closeSheet(); render();
+    };
+    setTimeout(() => $('#tt', el).focus(), 350);
+  });
   $$('.soap').forEach(b => b.onclick = async () => openThought(await db.get('thoughts', b.dataset.id), b));
 }
 

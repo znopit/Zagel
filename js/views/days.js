@@ -1,6 +1,6 @@
 import { db } from '../db.js';
 import { DEFS, TAGS, tagSVG } from '../art.js';
-import { $, $$, esc, openSheet, closeSheet, sheetHead, dayKey, niceDate, pageTop, pageTitle } from '../ui.js';
+import { $, $$, esc, openSheet, closeSheet, onSheetClose, sheetHead, dayKey, niceDate, pageTop, pageTitle } from '../ui.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const LABEL = Object.fromEntries(TAGS.map(t => [t.id, t.label]));
@@ -44,9 +44,6 @@ async function draw() {
   const byKey = Object.fromEntries(all.map(d => [d.id, d]));
   const yk = dayKey(new Date(Date.now() - 86400000));
   const y = byKey[yk];
-  const cur = byKey[editing] || { id: editing, tags: [], note: '' };
-  const isToday = editing === dayKey();
-  const groups = ['MAKE', 'PLAY', 'LIVE'];
 
   $('#view').innerHTML = `<div class="wrap wide page">
     ${pageTop()}
@@ -56,30 +53,19 @@ async function draw() {
       ${y && (y.tags.length || y.note) ? `<div class="tags">${y.tags.map(t => tagSVG(t, 34)).join('')}</div><span class="muted" style="font-size:14px">${esc(y.note || y.tags.map(t => LABEL[t]).join(', '))}</span>` : `<span class="muted" style="font-size:14px">The bagel went hungry. It forgives you.</span>`}
     </div>
 
-    <div class="sec tight"><span>${isToday ? 'Today' : niceDate(editing, true)}</span>
-      <label class="kicker" style="cursor:pointer">Another day <input type="date" id="pick" value="${editing}" min="2026-01-01" max="${dayKey()}" style="opacity:0;width:1px;height:1px;position:absolute"></label></div>
-    ${groups.map(g => `<div class="taggrp"><div class="kicker">${g}</div><div class="tagrow">
-      ${TAGS.filter(t => t.group === g).map(t => `<button class="tagbtn ${cur.tags.includes(t.id) ? 'on' : ''}" data-t="${t.id}">${tagSVG(t.id, 58)}<span>${esc(t.label)}</span></button>`).join('')}
-    </div></div>`).join('')}
-    <input class="field" id="note" maxlength="140" placeholder="A few words for the bagel" value="${esc(cur.note || '')}" style="margin-top:18px">
+    <div class="row" style="margin-top:22px">
+      <button class="btn" id="feed">${byKey[dayKey()] ? 'Today’s seed' : 'Feed today’s seed'}</button>
+      <label class="btn ghost" id="other">Another day <input type="date" id="pick" min="2026-01-01" max="${dayKey()}" style="opacity:0;width:1px;height:1px;position:absolute"></label>
+    </div>
 
     <div class="yearnav"><button class="round" id="py" aria-label="Previous year" style="${year <= START_YEAR ? 'visibility:hidden' : ''}">←</button><b>${year}</b><button class="round" id="ny" aria-label="Next year" style="${year >= new Date().getFullYear() ? 'visibility:hidden' : ''}">→</button></div>
     <div class="mural" id="mural">${MONTHS.map((m, i) => `<div class="month" data-m="${i}"><span class="ml">${String(i + 1).padStart(2, '0')} ${m} · <span class="cnt">0</span></span></div>`).join('')}</div>
     <p class="note">Poke a creature to see where it came from.</p>
   </div>`;
 
-  const save = async () => {
-    const tags = $$('.tagbtn.on').map(b => b.dataset.t);
-    const note = $('#note').value.trim();
-    if (!tags.length && !note) { await db.del('days', editing); }
-    else await db.put('days', Object.assign(byKey[editing] || { id: editing }, { tags, note }));
-    byKey[editing] = (await db.get('days', editing)) || undefined;
-    mural(byKey);
-  };
-  $$('.tagbtn').forEach(b => b.onclick = () => { b.classList.toggle('on'); save(); });
-  $('#note').addEventListener('change', save);
-  $('#pick').addEventListener('change', e => { if (e.target.value) { editing = e.target.value; draw(); } });
-  $('.sec label').onclick = () => { const p = $('#pick'); if (p.showPicker) { try { p.showPicker(); } catch (e) {} } };
+  $('#feed').onclick = () => editDay(dayKey());
+  $('#pick').addEventListener('change', e => { if (e.target.value) editDay(e.target.value); });
+  $('#other').onclick = () => { const p = $('#pick'); if (p.showPicker) { try { p.showPicker(); } catch (e) {} } };
   $('#py').onclick = () => { if (year > START_YEAR) { year--; draw(); } };
   $('#ny').onclick = () => { if (year < new Date().getFullYear()) { year++; draw(); } };
   mural(byKey);
@@ -125,6 +111,29 @@ function showDay(d) {
     <div class="row" style="gap:4px">${d.tags.map(t => `<div style="text-align:center;font-size:12px" class="muted">${tagSVG(t, 64)}<div>${esc(LABEL[t])}</div></div>`).join('')}</div>
     ${d.note ? `<p class="intro" style="margin-top:14px">${esc(d.note)}</p>` : ''}
     <div class="row" style="margin-top:20px"><button class="btn ghost" id="edit-day">Edit this day</button></div>`, el => {
-    $('#edit-day', el).onclick = () => { closeSheet(); editing = d.id; draw().then(() => window.scrollTo({ top: $('.sec.tight').offsetTop - 20, behavior: 'smooth' })); };
+    $('#edit-day', el).onclick = () => editDay(d.id);
+  });
+}
+
+// Feeding a day happens in a sheet, so the page itself is just the year on display.
+async function editDay(key) {
+  editing = key;
+  const cur = (await db.get('days', key)) || { id: key, tags: [], note: '' };
+  const groups = ['MAKE', 'PLAY', 'LIVE'];
+  openSheet(`${sheetHead(key === dayKey() ? 'Today' : niceDate(key, true))}
+    ${groups.map(g => `<div class="taggrp"><div class="kicker">${g}</div><div class="tagrow">
+      ${TAGS.filter(t => t.group === g).map(t => `<button class="tagbtn ${cur.tags.includes(t.id) ? 'on' : ''}" data-t="${t.id}">${tagSVG(t.id, 58)}<span>${esc(t.label)}</span></button>`).join('')}
+    </div></div>`).join('')}
+    <input class="field" id="note" maxlength="140" placeholder="A few words for the bagel" value="${esc(cur.note || '')}" style="margin-top:18px">
+    <div class="row" style="margin-top:20px"><button class="btn" data-close>Done</button></div>`, el => {
+    const save = async () => {
+      const tags = $$('.tagbtn.on', el).map(b => b.dataset.t);
+      const note = $('#note', el).value.trim();
+      if (!tags.length && !note) await db.del('days', key);
+      else await db.put('days', Object.assign((await db.get('days', key)) || { id: key }, { tags, note }));
+    };
+    $$('.tagbtn', el).forEach(b => b.onclick = () => { b.classList.toggle('on'); save(); });
+    $('#note', el).addEventListener('input', save);
+    onSheetClose(async () => { await save(); year = +key.slice(0, 4); draw(); });
   });
 }

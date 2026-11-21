@@ -1,5 +1,5 @@
 import { db, uid } from '../db.js';
-import { $, $$, esc, ask, toast, shrinkImage, blobURL, daysSince, niceDate, pageTop, pageTitle } from '../ui.js';
+import { $, $$, esc, ask, toast, shrinkImage, blobURL, daysSince, niceDate, pageTop, pageTitle, openSheet, closeSheet, sheetHead } from '../ui.js';
 
 function twig(leaves, ripe, snapped) {
   const spots = [[-14, -40, -38], [12, -36, 34], [-6, -24, -28], [18, -22, 40], [-16, -12, -48], [8, -8, 26]];
@@ -42,28 +42,32 @@ export async function render() {
   $('#view').innerHTML = `<div class="wrap page">
     ${pageTop()}
     ${pageTitle('Wishes', '03', 'One wish willow', 'Plant a twig. Wait thirty days. Snap it when it’s yours. No takebacks.')}
-    <div class="stack" style="margin-top:22px">
-      <input class="field" id="wn" placeholder="What do you want?" maxlength="100">
-      <input class="field" id="wp" placeholder="Price" maxlength="30">
-      <div class="row"><label class="btn ghost filebtn">Add a photo<input type="file" id="wf" accept="image/*"></label><span class="muted" id="wfn" style="font-size:14px"></span></div>
-      <button class="btn" id="add">Plant a twig</button>
-    </div>
+    <div class="row" style="margin-top:22px"><button class="btn" id="plant">Plant a twig</button></div>
     <div class="sec"><span>On the willow</span><span>(${waiting.length})</span></div>
     <div>${waiting.map(row).join('') || '<p class="empty">No twigs yet.</p>'}</div>
     ${snapped.length ? `<div class="sec"><span>Came true</span><span>(${snapped.length})</span></div><div>${snapped.map(row).join('')}</div>` : ''}
     ${gone.length ? `<div class="sec"><span>Let go</span><span>(${gone.length})</span></div><div>${gone.map(row).join('')}</div>` : ''}
   </div>`;
 
-  $('#wf').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
-    photo = (await shrinkImage(f, 1000)).blob; $('#wfn').textContent = 'Photo added';
-  };
-  $('#add').onclick = async () => {
-    const name = $('#wn').value.trim();
-    if (!name) { $('#wn').focus(); return; }
-    await db.put('wishes', { id: uid(), name, price: $('#wp').value.trim(), img: photo, status: 'waiting' });
-    render();
-  };
+  $('#plant').onclick = () => openSheet(`${sheetHead('New twig')}
+    <div class="stack">
+      <input class="field" id="wn" placeholder="What do you want?" maxlength="100">
+      <input class="field" id="wp" placeholder="Price" maxlength="30">
+      <div class="row"><label class="btn ghost filebtn">Add a photo<input type="file" id="wf" accept="image/*"></label><span class="muted" id="wfn" style="font-size:14px"></span></div>
+      <button class="btn" id="add">Plant it</button>
+    </div>`, el => {
+    photo = null;
+    $('#wf', el).onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      photo = (await shrinkImage(f, 1000)).blob; $('#wfn', el).textContent = 'Photo added';
+    };
+    $('#add', el).onclick = async () => {
+      const name = $('#wn', el).value.trim();
+      if (!name) { $('#wn', el).focus(); return; }
+      await db.put('wishes', { id: uid(), name, price: $('#wp', el).value.trim(), img: photo, status: 'waiting' });
+      closeSheet(); render();
+    };
+  });
   $$('.wish').forEach(el => {
     const id = el.dataset.id;
     const upd = async patch => { const w = await db.get('wishes', id); await db.put('wishes', Object.assign(w, patch)); render(); };

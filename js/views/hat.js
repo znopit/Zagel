@@ -87,12 +87,7 @@ export async function render() {
   $('#view').innerHTML = `<div class="wrap page">
     ${pageTop()}
     ${pageTitle('Party Hat', '02', 'Small parties', 'Small things nobody else would throw a party for. Every party leaves a hat on the tower.')}
-    <div class="stack" style="margin-top:26px">
-      <input class="field" id="what" maxlength="160" placeholder="What are we celebrating?">
-      <div class="kicker" style="margin-top:6px">Which hat?</div>
-      <div id="newpick">${picker('', true)}</div>
-      <button class="btn" id="go">Put the hat on</button>
-    </div>
+    <div class="row" style="margin-top:22px"><button class="btn" id="throw">Throw a party</button><button class="btn ghost" id="drawer">Hat drawer</button></div>
     <div class="party" style="margin-top:40px"><span class="n">${thisYear}</span><span class="kicker">${thisYear === 1 ? 'party' : 'parties'} in ${y}</span></div>
     ${ys.length ? ys.map(yr => {
       const stack = balance(years[yr]).reverse();
@@ -104,36 +99,50 @@ export async function render() {
         <div class="ground"><span class="ld">Party hats, ${yr}. Paper, glue, ${years[yr].length} ${years[yr].length === 1 ? 'party' : 'parties'}.</span><span class="ld ldt">Still balancing.</span></div>
       </div>`;
     }).join('') : '<p class="empty" style="margin-top:20px">No parties yet. The first hat is waiting.</p>'}
-    <div class="sec"><span>Hat drawer</span><span>(${6 + drawer.length})</span></div>
-    <p class="note">Six printed hats live here. Draw your own on the blank one, keep the canvas size, save as PNG, and put it in. New parties pick from the whole drawer.</p>
-    <div class="drawer">${[0, 1, 2, 3, 4, 5].map(n => `<span class="dh">${hatSVG({ id: 'drawer', hat: 'b' + n })}</span>`).join('')}${drawer.map(m => `<button class="dh mine" data-hat="${m.id}">${hatSVG({ id: m.id, hat: m.id })}</button>`).join('')}</div>
-    <div class="row" style="margin-top:16px"><label class="btn filebtn">Add my hat<input type="file" id="hf" accept="image/png,image/*"></label><a class="btn ghost" href="img/hat-blank.png" download="zagel-blank-hat.png">Blank hat</a></div>
   </div>`;
   justAdded = null;
 
-  let chosen = '';
-  bindPicker($('#newpick'), h => { chosen = h; });
-  const go = async () => {
-    const text = $('#what').value.trim();
-    if (!text) { $('#what').focus(); return; }
-    const id = uid();
-    await db.put('parties', { id, text, hat: chosen || pickHat() });
-    justAdded = id;
-    const r = $('#go').getBoundingClientRect();
-    confetti(r.left + r.width / 2, r.top, 46);
-    setTimeout(render, 380);
-  };
-  $('#go').onclick = go;
-  $('#what').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  $('#throw').onclick = () => openSheet(`${sheetHead('New party')}
+    <div class="stack">
+      <input class="field" id="what" maxlength="160" placeholder="What are we celebrating?">
+      <div class="kicker" style="margin-top:6px">Which hat?</div>
+      ${picker('', true)}
+      <button class="btn" id="go">Put the hat on</button>
+    </div>`, el => {
+    let chosen = '';
+    bindPicker(el, h => { chosen = h; });
+    const go = async () => {
+      const text = $('#what', el).value.trim();
+      if (!text) { $('#what', el).focus(); return; }
+      const id = uid();
+      await db.put('parties', { id, text, hat: chosen || pickHat() });
+      justAdded = id;
+      closeSheet();
+      confetti(innerWidth / 2, innerHeight * .45, 46);
+      setTimeout(render, 380);
+    };
+    $('#go', el).onclick = go;
+    $('#what', el).addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    setTimeout(() => $('#what', el).focus(), 350);
+  });
   $$('.hrow').forEach(b => b.onclick = async () => invite(await db.get('parties', b.dataset.id)));
-  $('#hf').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
-    const { blob } = await shrinkImage(f, 980);
-    await db.put('meta', { id: 'hat-' + uid(), value: blob });
-    toast('Into the drawer.'); render();
-  };
-  $$('[data-hat]').forEach(b => b.onclick = async () => {
-    if (await ask('Take this hat out of the drawer? Parties wearing it go back to a printed one.', 'Take it out', true)) { await db.del('meta', b.dataset.hat); render(); }
+  $('#drawer').onclick = () => openDrawer(drawer);
+}
+
+function openDrawer(drawer) {
+  openSheet(`${sheetHead('Hat drawer · ' + (6 + drawer.length))}
+    <p class="intro">Six printed hats live here. Draw your own on the blank one, keep the canvas size, save as PNG, and put it in.</p>
+    <div class="drawer">${[0, 1, 2, 3, 4, 5].map(n => `<span class="dh">${hatSVG({ id: 'drawer', hat: 'b' + n })}</span>`).join('')}${drawer.map(m => `<button class="dh mine" data-hat="${m.id}">${hatSVG({ id: m.id, hat: m.id })}</button>`).join('')}</div>
+    <div class="row" style="margin-top:18px"><label class="btn filebtn">Add my hat<input type="file" id="hf" accept="image/png,image/*"></label><a class="btn ghost" href="img/hat-blank.png" download="zagel-blank-hat.png">Blank hat</a></div>`, el => {
+    $('#hf', el).onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      const { blob } = await shrinkImage(f, 980);
+      await db.put('meta', { id: 'hat-' + uid(), value: blob });
+      toast('Into the drawer.'); await render(); openDrawer(await loadDrawer());
+    };
+    $$('[data-hat]', el).forEach(b => b.onclick = async () => {
+      if (await ask('Take this hat out of the drawer? Parties wearing it go back to a printed one.', 'Take it out', true)) { await db.del('meta', b.dataset.hat); render(); }
+    });
   });
 }
 

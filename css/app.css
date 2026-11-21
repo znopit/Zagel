@@ -46,6 +46,7 @@ img{display:block}
 .sub .g{color:#6E7279}.sub .z{color:var(--blue)}
 .lede{font-size:19px;line-height:1.45;margin-top:30px;max-width:30em}
 .homewrap .lede{text-wrap:pretty}
+.homewrap .roadcol > .sec{margin-top:34px}
 .note{font-size:15px;color:var(--muted);margin-top:14px}
 .sec{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ink);padding-bottom:12px;margin-top:64px;font-family:var(--display);font-weight:500;font-size:15px;letter-spacing:0.04em;text-transform:uppercase}
 .sec.tight{margin-top:40px}
