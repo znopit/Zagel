@@ -1,0 +1,112 @@
+// Zagel local storage: everything lives in IndexedDB on this device.
+const DB_NAME = 'zagel';
+const DB_VERSION = 1;
+export const STORES = ['days', 'parties', 'wishes', 'looks', 'thoughts', 'books', 'spells', 'creatures', 'meta'];
+
+let dbp = null;
+function open() {
+  if (dbp) return dbp;
+  dbp = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      for (const s of STORES) {
+        if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbp;
+}
+
+function tx(store, mode, fn) {
+  return open().then(db => new Promise((resolve, reject) => {
+    const t = db.transaction(store, mode);
+    const s = t.objectStore(store);
+    let out;
+    Promise.resolve(fn(s)).then(v => { out = v; });
+    t.oncomplete = () => resolve(out);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+  }));
+}
+
+function reqP(r) { return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+
+export const db = {
+  async get(store, id) { return tx(store, 'readonly', s => reqP(s.get(id))); },
+  async all(store) { return tx(store, 'readonly', s => reqP(s.getAll())); },
+  async put(store, obj) {
+    obj.updated = Date.now();
+    if (!obj.created) obj.created = obj.updated;
+    await tx(store, 'readwrite', s => reqP(s.put(obj)));
+    return obj;
+  },
+  async del(store, id) { return tx(store, 'readwrite', s => reqP(s.delete(id))); },
+  async clear(store) { return tx(store, 'readwrite', s => reqP(s.clear())); },
+};
+
+export function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+export async function getMeta(key, fallback = null) {
+  const r = await db.get('meta', key);
+  return r ? r.value : fallback;
+}
+export async function setMeta(key, value) {
+  return db.put('meta', { id: key, value });
+}
+
+// ---------- backup ----------
+function blobToDataURL(b) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+}
+async function dataURLToBlob(u) { return (await fetch(u)).blob(); }
+
+async function encode(v) {
+  if (v instanceof Blob) return { __blob: await blobToDataURL(v) };
+  if (Array.isArray(v)) return Promise.all(v.map(encode));
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const k of Object.keys(v)) o[k] = await encode(v[k]);
+    return o;
+  }
+  return v;
+}
+async function decode(v) {
+  if (v && typeof v === 'object' && !Array.isArray(v) && typeof v.__blob === 'string') return dataURLToBlob(v.__blob);
+  if (Array.isArray(v)) return Promise.all(v.map(decode));
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const k of Object.keys(v)) o[k] = await decode(v[k]);
+    return o;
+  }
+  return v;
+}
+
+export async function exportAll() {
+  const out = { app: 'zagel', version: 1, exported: new Date().toISOString(), stores: {} };
+  for (const s of STORES) out.stores[s] = await encode(await db.all(s));
+  return new Blob([JSON.stringify(out)], { type: 'application/json' });
+}
+
+// Merge: records that don't exist are added; existing ones are replaced only if the backup's copy is newer.
+export async function importAll(file) {
+  const text = await file.text();
+  let data;
+  try { data = JSON.parse(text); } catch (e) { throw new Error('That file isn’t a Zagel backup.'); }
+  if (!data || data.app !== 'zagel' || !data.stores) throw new Error('That file isn’t a Zagel backup.');
+  let added = 0, updated = 0;
+  for (const s of STORES) {
+    const rows = data.stores[s] || [];
+    for (const raw of rows) {
+      const row = await decode(raw);
+      const cur = await db.get(s, row.id);
+      if (!cur) { await tx(s, 'readwrite', st => reqP(st.put(row))); added++; }
+      else if ((row.updated || 0) > (cur.updated || 0)) { await tx(s, 'readwrite', st => reqP(st.put(row))); updated++; }
+    }
+  }
+  return { added, updated };
+}
