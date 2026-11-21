@@ -3,7 +3,7 @@ import { closeSheet, openMenu } from './ui.js';
 import { renderHome } from './home.js';
 
 // Bump together with VERSION in sw.js.
-export const VERSION = '8';
+export const VERSION = '9';
 export const BUILT = '22 Nov 2026';
 
 document.getElementById('defs').innerHTML = DEFS;

@@ -9,7 +9,8 @@ const ROW = 86;
 function rnd(seed) { let h = 7; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0; return () => { h = (h * 1103515245 + 12345) >>> 0; return h / 4294967296; }; }
 
 function look(p) {
-  const r = rnd(p.id + (p.hat && p.hat.startsWith('b') ? p.hat : ''));
+  // the six printed hats look the same on everyone; older parties keep their own mix
+  const r = rnd(p.hat && /^b\d$/.test(p.hat) ? 'drawer' + p.hat : p.id);
   const col = COLS[Math.floor(r() * COLS.length)];
   let alt = COLS[Math.floor(r() * COLS.length)]; if (alt === col) alt = '#FBF8F0';
   let pat = PATS[Math.floor(r() * PATS.length)];
@@ -62,6 +63,13 @@ async function loadDrawer() {
   return rows.sort((a, b) => a.created - b.created);
 }
 // A new party picks any hat in the drawer: the six printed patterns or one of Zoi's own.
+function picker(sel, random) {
+  const ids = ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', ...Object.keys(DRAWER)];
+  return `<div class="picker">${random ? `<button class="pk any ${sel ? '' : 'on'}" data-pick="" aria-label="Surprise me">?</button>` : ''}${ids.map(h => `<button class="pk ${h === sel ? 'on' : ''}" data-pick="${h}">${hatSVG({ id: 'pk' + h, hat: h })}</button>`).join('')}</div>`;
+}
+function bindPicker(el, onPick) {
+  $$('[data-pick]', el).forEach(b => b.onclick = () => { $$('[data-pick]', el).forEach(x => x.classList.toggle('on', x === b)); onPick(b.dataset.pick); });
+}
 function pickHat(not) {
   const pool = ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', ...Object.keys(DRAWER)].filter(h => h !== not);
   return pool[Math.floor(Math.random() * pool.length)];
@@ -81,6 +89,8 @@ export async function render() {
     ${pageTitle('Party Hat', '02', 'Small parties', 'Small things nobody else would throw a party for. Every party leaves a hat on the tower.')}
     <div class="stack" style="margin-top:26px">
       <input class="field" id="what" maxlength="160" placeholder="What are we celebrating?">
+      <div class="kicker" style="margin-top:6px">Which hat?</div>
+      <div id="newpick">${picker('', true)}</div>
       <button class="btn" id="go">Put the hat on</button>
     </div>
     <div class="party" style="margin-top:40px"><span class="n">${thisYear}</span><span class="kicker">${thisYear === 1 ? 'party' : 'parties'} in ${y}</span></div>
@@ -101,11 +111,13 @@ export async function render() {
   </div>`;
   justAdded = null;
 
+  let chosen = '';
+  bindPicker($('#newpick'), h => { chosen = h; });
   const go = async () => {
     const text = $('#what').value.trim();
     if (!text) { $('#what').focus(); return; }
     const id = uid();
-    await db.put('parties', { id, text, hat: pickHat() });
+    await db.put('parties', { id, text, hat: chosen || pickHat() });
     justAdded = id;
     const r = $('#go').getBoundingClientRect();
     confetti(r.left + r.width / 2, r.top, 46);
@@ -138,12 +150,14 @@ function invite(p) {
         <p class="iv-s">Dress code: the hat. RSVP: not required.</p>
       </div>
     </div>
-    <div class="row" style="margin-top:22px"><button class="btn ghost" id="pe">Edit</button><button class="btn ghost" id="ph">Another hat</button><button class="btn danger" id="px">Take the hat off</button></div>`, el => {
-    $('#ph', el).onclick = async () => {
-      p.hat = pickHat(p.hat); await db.put('parties', p);
+    <div class="kicker" style="margin-top:22px">Wear another hat</div>
+    ${picker(p.hat || '', false)}
+    <div class="row" style="margin-top:22px"><button class="btn ghost" id="pe">Edit</button><button class="btn danger" id="px">Take the hat off</button></div>`, el => {
+    bindPicker(el, async h => {
+      p.hat = h; await db.put('parties', p);
       $('.iv-hat', el).innerHTML = hatSVG(p); $('.invite', el).style.setProperty('--hc', look(p).col);
       render();
-    };
+    });
     $('#pe', el).onclick = () => {
       $('.iv-t', el).outerHTML = `<textarea class="field" id="ptx" rows="2" maxlength="160">${esc(p.text)}</textarea>`;
       $('#ptx', el).focus();

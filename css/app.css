@@ -38,7 +38,7 @@ img{display:block}
 .hero{position:relative;padding-top:12px}
 .hero{padding-top:18px}
 .hero:after{content:'';display:block;clear:both}
-.portrait{float:right;width:57%;margin:-9vw -7% 0 0;transform:rotate(5deg);position:relative;z-index:3;pointer-events:none;shape-outside:url(../img/zoi.png);shape-image-threshold:.2;shape-margin:14px}
+.portrait{float:right;width:74%;margin:2vw -13% 0 0;transform:rotate(5deg);position:relative;z-index:3;pointer-events:none;shape-outside:url(../img/zoi.png);shape-image-threshold:.2;shape-margin:14px}
 .portrait img{width:100%}
 .big{font-family:var(--display);font-weight:600;font-size:clamp(104px,28vw,320px);line-height:.82;letter-spacing:-0.065em;position:relative;z-index:1;white-space:nowrap}
 .big .dash{display:inline-block;width:.3em;height:.068em;background:var(--ink);vertical-align:.26em;margin-left:.13em}
@@ -339,3 +339,10 @@ body.riso .btn.ghost{background:transparent;color:#F3EEF8;border-color:#F3EEF8}
 .drawer .dh{-webkit-appearance:none;appearance:none;background:none;border:0;padding:0;aspect-ratio:76/98;display:block}
 .drawer .dh svg,.drawer .dh img{width:100%;height:100%;overflow:visible}
 .drawer .mine{outline:1px dashed var(--hair);outline-offset:2px}
+.picker{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 10px;margin:0 -2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.picker::-webkit-scrollbar{display:none}
+.pk{-webkit-appearance:none;appearance:none;flex:none;width:48px;height:60px;padding:4px;background:none;border:1px solid transparent;border-radius:8px}
+.pk svg,.pk img{width:100%;height:100%;overflow:visible}
+.pk.on{border-color:var(--ink)}
+.pk.any{font-family:var(--display);font-weight:600;font-size:24px;border:1px dashed var(--hair)}
+.pk.any.on{border:1px solid var(--ink)}
