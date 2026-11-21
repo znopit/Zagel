@@ -1,5 +1,5 @@
 import { db, uid } from '../db.js';
-import { $, $$, esc, confetti, ask, pageTop, pageTitle, openSheet, closeSheet, sheetHead } from '../ui.js';
+import { $, $$, esc, confetti, ask, toast, pageTop, pageTitle, openSheet, closeSheet, sheetHead, shrinkImage, blobURL } from '../ui.js';
 
 // Every party leaves a paper hat. Each new one balances on the tip of the last.
 const COLS = ['#2A4EFC', '#F6E21C', '#F3C6D3', '#86C97E', '#F07A2A', '#E0391F', '#B9A7E8', '#7FC8E8'];
@@ -9,17 +9,21 @@ const ROW = 86;
 function rnd(seed) { let h = 7; for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0; return () => { h = (h * 1103515245 + 12345) >>> 0; return h / 4294967296; }; }
 
 function look(p) {
-  const r = rnd(p.id);
+  const r = rnd(p.id + (p.hat && p.hat.startsWith('b') ? p.hat : ''));
   const col = COLS[Math.floor(r() * COLS.length)];
   let alt = COLS[Math.floor(r() * COLS.length)]; if (alt === col) alt = '#FBF8F0';
-  return { col, alt, pat: PATS[Math.floor(r() * PATS.length)], pom: r() < .5 ? '#FBF8F0' : alt, r };
+  let pat = PATS[Math.floor(r() * PATS.length)];
+  if (p.hat && /^b\d$/.test(p.hat)) pat = PATS[+p.hat[1]];
+  return { col, alt, pat, pom: r() < .5 ? '#FBF8F0' : alt, r };
 }
 
 const star = (x, y, s) => { let d = ''; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? s * .45 : s; d += (i ? 'L' : 'M') + (x + Math.cos(a) * rr).toFixed(1) + ' ' + (y + Math.sin(a) * rr).toFixed(1); } return d + 'Z'; };
 
+let DRAWER = {};
 export function hatSVG(p, cls = '') {
+  if (p.hat && DRAWER[p.hat]) return `<img class="${cls}" src="${blobURL(DRAWER[p.hat])}" alt="">`;
   const { col, alt, pat, pom, r } = look(p);
-  const id = 'hc' + p.id.replace(/\W/g, '');
+  const id = 'hc' + (p.id + (p.hat || '')).replace(/\W/g, '');
   let deco = '';
   if (pat === 'stripes') for (let x = -60; x < 80; x += 13) deco += `<path d="M${x} 90 L${x + 50} -6" stroke="${alt}" stroke-width="5"/>`;
   if (pat === 'dots') for (let i = 0; i < 9; i++) deco += `<circle cx="${(8 + r() * 44).toFixed(1)}" cy="${(16 + r() * 60).toFixed(1)}" r="${(2.2 + r() * 2).toFixed(1)}" fill="${alt}"/>`;
@@ -52,7 +56,19 @@ function balance(list) {
 
 let justAdded = null;
 
+async function loadDrawer() {
+  const rows = (await db.all('meta')).filter(m => m.id.startsWith('hat-'));
+  DRAWER = Object.fromEntries(rows.map(m => [m.id, m.value]));
+  return rows.sort((a, b) => a.created - b.created);
+}
+// A new party picks any hat in the drawer: the six printed patterns or one of Zoi's own.
+function pickHat(not) {
+  const pool = ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', ...Object.keys(DRAWER)].filter(h => h !== not);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 export async function render() {
+  const drawer = await loadDrawer();
   const parties = (await db.all('parties')).sort((a, b) => a.created - b.created);
   const years = {};
   parties.forEach(p => (years[new Date(p.created).getFullYear()] ||= []).push(p));
@@ -70,13 +86,18 @@ export async function render() {
     <div class="party" style="margin-top:40px"><span class="n">${thisYear}</span><span class="kicker">${thisYear === 1 ? 'party' : 'parties'} in ${y}</span></div>
     ${ys.length ? ys.map(yr => {
       const stack = balance(years[yr]).reverse();
-      return `<div class="tower">${stack.map(({ p, x, rot }, i) => `<button class="hrow${p.id === justAdded ? ' drop' : ''}" data-id="${p.id}" style="z-index:${stack.length - i};height:${ROW}px">
-          <span class="hcol"><span class="hat" style="left:calc(50% + ${x.toFixed(1)}px - 38px);top:${ROW - 91}px;transform:rotate(${rot.toFixed(1)}deg)">${hatSVG(p)}</span></span>
+      return `<div class="tower">${stack.map(({ p, x, rot }, i) => `<button class="hrow ${i % 2 ? 'l' : 'r'}${p.id === justAdded ? ' drop' : ''}" data-id="${p.id}" style="z-index:${stack.length - i};height:${ROW}px">
           <span class="hl"><span class="ht">${esc(p.text)}</span><span class="hd">${new Date(p.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></span>
+          <span class="hcol"><span class="hat" style="left:calc(50% + ${x.toFixed(1)}px - 38px);top:${ROW - 91}px;transform:rotate(${rot.toFixed(1)}deg)">${hatSVG(p)}</span></span>
+          <span class="hl"></span>
         </button>`).join('')}
         <div class="ground"><span class="ld">Party hats, ${yr}. Paper, glue, ${years[yr].length} ${years[yr].length === 1 ? 'party' : 'parties'}.</span><span class="ld ldt">Still balancing.</span></div>
       </div>`;
     }).join('') : '<p class="empty" style="margin-top:20px">No parties yet. The first hat is waiting.</p>'}
+    <div class="sec"><span>Hat drawer</span><span>(${6 + drawer.length})</span></div>
+    <p class="note">Six printed hats live here. Draw your own on the blank one, keep the canvas size, save as PNG, and put it in. New parties pick from the whole drawer.</p>
+    <div class="drawer">${[0, 1, 2, 3, 4, 5].map(n => `<span class="dh">${hatSVG({ id: 'drawer', hat: 'b' + n })}</span>`).join('')}${drawer.map(m => `<button class="dh mine" data-hat="${m.id}">${hatSVG({ id: m.id, hat: m.id })}</button>`).join('')}</div>
+    <div class="row" style="margin-top:16px"><label class="btn filebtn">Add my hat<input type="file" id="hf" accept="image/png,image/*"></label><a class="btn ghost" href="img/hat-blank.png" download="zagel-blank-hat.png">Blank hat</a></div>
   </div>`;
   justAdded = null;
 
@@ -84,7 +105,7 @@ export async function render() {
     const text = $('#what').value.trim();
     if (!text) { $('#what').focus(); return; }
     const id = uid();
-    await db.put('parties', { id, text });
+    await db.put('parties', { id, text, hat: pickHat() });
     justAdded = id;
     const r = $('#go').getBoundingClientRect();
     confetti(r.left + r.width / 2, r.top, 46);
@@ -93,6 +114,15 @@ export async function render() {
   $('#go').onclick = go;
   $('#what').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   $$('.hrow').forEach(b => b.onclick = async () => invite(await db.get('parties', b.dataset.id)));
+  $('#hf').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const { blob } = await shrinkImage(f, 980);
+    await db.put('meta', { id: 'hat-' + uid(), value: blob });
+    toast('Into the drawer.'); render();
+  };
+  $$('[data-hat]').forEach(b => b.onclick = async () => {
+    if (await ask('Take this hat out of the drawer? Parties wearing it go back to a printed one.', 'Take it out', true)) { await db.del('meta', b.dataset.hat); render(); }
+  });
 }
 
 function invite(p) {
@@ -108,7 +138,12 @@ function invite(p) {
         <p class="iv-s">Dress code: the hat. RSVP: not required.</p>
       </div>
     </div>
-    <div class="row" style="margin-top:22px"><button class="btn ghost" id="pe">Edit</button><button class="btn danger" id="px">Take the hat off</button></div>`, el => {
+    <div class="row" style="margin-top:22px"><button class="btn ghost" id="pe">Edit</button><button class="btn ghost" id="ph">Another hat</button><button class="btn danger" id="px">Take the hat off</button></div>`, el => {
+    $('#ph', el).onclick = async () => {
+      p.hat = pickHat(p.hat); await db.put('parties', p);
+      $('.iv-hat', el).innerHTML = hatSVG(p); $('.invite', el).style.setProperty('--hc', look(p).col);
+      render();
+    };
     $('#pe', el).onclick = () => {
       $('.iv-t', el).outerHTML = `<textarea class="field" id="ptx" rows="2" maxlength="160">${esc(p.text)}</textarea>`;
       $('#ptx', el).focus();

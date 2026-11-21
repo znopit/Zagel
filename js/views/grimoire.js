@@ -13,7 +13,9 @@ const CREATURES = [
   ['home', 'The House', 'Two cats, one door, and windows that stay lit until you’re back.'],
 ];
 let road = null;
-function art(key, night) {
+function art(key, night, mine) {
+  const own = mine && (night ? mine.night : mine.day);
+  if (own) return `<img src="${blobURL(own)}" alt="">`;
   if (!road) road = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${ROAD}</svg>`, 'image/svg+xml');
   const g = road.querySelector(`[data-k="${key}"]`);
   if (!g) return '';
@@ -31,6 +33,7 @@ export async function render() {
   const spells = (await db.all('spells')).sort((a, b) => b.created - a.created);
   const custom = (await db.all('creatures')).sort((a, b) => a.created - b.created);
   const lore = Object.fromEntries(custom.filter(c => c.builtin).map(c => [c.id, c.lore]));
+  const drawn = Object.fromEntries(custom.filter(c => c.builtin).map(c => [c.id, c]));
   const mine = custom.filter(c => !c.builtin);
 
   $('#view').innerHTML = `<div class="wrap page">
@@ -46,8 +49,8 @@ export async function render() {
       ${spells.length ? '' : '<p class="empty">No spells yet. Steal a page from the Shelf, or write one by hand.</p>'}
     ` : `
       <p class="note" style="margin-top:14px">Every creature on the road, by day and by night. Written down by Zi.</p>
-      ${CREATURES.map(([k, name, def]) => `<div class="ccard"><div class="form">${art(k, false)}</div><div class="form n">${art(k, true)}</div>
-        <div class="txt"><h3>${name}</h3><p>“${esc(lore[k] || def)}” — Zi</p><button class="btn ghost small" data-lore="${k}" style="margin-top:8px">Rewrite</button></div></div>`).join('')}
+      ${CREATURES.map(([k, name, def]) => `<div class="ccard"><div class="form">${art(k, false, drawn[k])}</div><div class="form n">${art(k, true, drawn[k])}</div>
+        <div class="txt"><h3>${name}</h3><p>“${esc(lore[k] || def)}” — Zi</p><div class="row" style="margin-top:8px"><button class="btn ghost small" data-draw="${k}">Redraw</button><button class="btn ghost small" data-lore="${k}">Rewrite</button></div></div></div>`).join('')}
       ${mine.map(c => `<div class="ccard" data-cid="${c.id}"><div class="form">${c.day ? `<img src="${blobURL(c.day)}" alt="">` : ''}</div><div class="form n">${c.night ? `<img src="${blobURL(c.night)}" alt="">` : ''}</div>
         <div class="txt"><h3>${esc(c.name)}</h3><p>“${esc(c.lore || '')}” — Zi</p><div class="row" style="margin-top:8px"><button class="btn ghost small" data-cedit="${c.id}">Edit</button></div></div></div>`).join('')}
       <div class="row" style="margin-top:18px"><button class="btn" id="nc">Add a creature</button></div>
@@ -61,6 +64,7 @@ export async function render() {
   } else {
     $$('[data-lore]').forEach(b => b.onclick = () => rewrite(b.dataset.lore, lore[b.dataset.lore] || CREATURES.find(c => c[0] === b.dataset.lore)[2]));
     $('#nc').onclick = () => editCreature();
+    $$('[data-draw]').forEach(b => b.onclick = () => redraw(b.dataset.draw, CREATURES.find(c => c[0] === b.dataset.draw)[1]));
     $$('[data-cedit]').forEach(b => b.onclick = async () => editCreature(await db.get('creatures', b.dataset.cedit)));
   }
 }
@@ -96,6 +100,24 @@ function editSpell(s) {
       Object.assign(s, { name, ingredients: $('#si', el).value.trim(), method: $('#sm', el).value.trim(), effect: $('#se', el).value.trim(), img });
       await db.put('spells', s); closeSheet(); render();
     };
+  });
+}
+
+function redraw(key, name) {
+  openSheet(`${sheetHead('Redraw ' + name)}<p class="intro">Your drawing takes its place here and on the road. A PNG with a see-through background works best. Leave the night one empty and the old night form stays.</p>
+    <div class="stack" style="margin-top:16px">
+      <label class="btn filebtn">Day form drawing<input type="file" id="rd" accept="image/*"></label>
+      <label class="btn filebtn">Night form drawing<input type="file" id="rn" accept="image/*"></label>
+      <button class="btn ghost small" id="rr">Back to Zi’s sketch</button>
+    </div>`, el => {
+    const save = async (field, f) => {
+      const cur = (await db.get('creatures', key)) || { id: key, builtin: true };
+      cur[field] = f ? (await shrinkImage(f, 1200)).blob : null;
+      await db.put('creatures', cur); closeSheet(); render(); toast(f ? 'Redrawn.' : 'Back to the sketch.');
+    };
+    $('#rd', el).onchange = e => e.target.files[0] && save('day', e.target.files[0]);
+    $('#rn', el).onchange = e => e.target.files[0] && save('night', e.target.files[0]);
+    $('#rr', el).onclick = async () => { const cur = await db.get('creatures', key); if (cur) { cur.day = null; cur.night = null; await db.put('creatures', cur); } closeSheet(); render(); };
   });
 }
 

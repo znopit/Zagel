@@ -1,6 +1,6 @@
 import { ROAD } from './art.js';
 import { db, getMeta } from './db.js';
-import { $, $$, esc, niceDate, pageTop } from './ui.js';
+import { $, $$, esc, niceDate, pageTop, blobURL } from './ui.js';
 
 export const MODE_BTN = `<button class="round mode" type="button" aria-label="Switch to night"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="moon" d="M15.5 3.5a8.5 8.5 0 1 0 5 13.5 7 7 0 1 1 -5 -13.5z"/><g class="sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></g></svg></button>`;
 
@@ -46,6 +46,7 @@ export async function renderHome() {
     setTimeout(blink, 900 + Math.random() * 1800);
   })();
 
+  await applyDrawings();
   setupWalker();
   placeCats();
   const t = setInterval(placeCats, 60000); cleanup.push(() => clearInterval(t));
@@ -54,20 +55,60 @@ export async function renderHome() {
 }
 window.addEventListener('zagel:leave', () => { cleanup.forEach(f => f()); cleanup = []; });
 
+// Zoi's own drawings (from the Grimoire) take the place of the sketched creatures.
+async function applyDrawings() {
+  const mine = (await db.all('creatures')).filter(c => c.builtin && (c.day || c.night));
+  const NS = 'http://www.w3.org/2000/svg';
+  for (const c of mine) {
+    const g = $(`.road .crt[data-k="${c.id}"]`);
+    if (!g) continue;
+    const swap = (parts, blob) => {
+      if (!parts.length || !blob) return;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const el of parts) {
+        const d = el.style.display; el.style.display = 'inline';
+        const b = el.getBBox(); el.style.display = d;
+        x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+      }
+      const im = document.createElementNS(NS, 'image');
+      im.setAttribute('href', blobURL(blob));
+      im.setAttribute('x', x0); im.setAttribute('y', y0); im.setAttribute('width', x1 - x0); im.setAttribute('height', y1 - y0);
+      im.setAttribute('preserveAspectRatio', 'xMidYMax meet');
+      parts.forEach((el, i) => { el.removeAttribute('filter'); el.innerHTML = ''; if (!i) el.appendChild(im); });
+    };
+    swap($$('.bob', g).filter(b => !b.classList.contains('nf')), c.day);
+    swap($$('.nf', g), c.night);
+  }
+}
+
 // mini Zoi walks down the road as you scroll
 function setupWalker() {
-  const svg = $('.road'), walker = $('#walker'), src = $('.road .path');
-  if (!svg || !walker || !src) return;
+  const road = $('.road'), walker = $('#walker'), src = $('.road .path');
+  if (!road || !walker || !src) return;
+  // Everything that moves lives on its own layer above the road, so the heavy
+  // pencil and glow filters on the road are drawn once instead of every frame.
+  const NS = 'http://www.w3.org/2000/svg';
+  const wrap = document.createElement('div'); wrap.className = 'roadwrap';
+  road.parentNode.insertBefore(wrap, road); wrap.appendChild(road);
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'road movers'); svg.setAttribute('viewBox', road.getAttribute('viewBox')); svg.setAttribute('aria-hidden', 'true');
+  const riv = document.createElementNS(NS, 'g'); riv.setAttribute('class', 'river');
+  $$('.rvs', road).forEach(n => riv.appendChild(n));
+  svg.appendChild(riv);
+  svg.appendChild(walker);
+  $$('.ff', road).forEach(n => svg.appendChild(n));
+  wrap.appendChild(svg);
   const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   track.setAttribute('d', src.getAttribute('d'));
   track.setAttribute('fill', 'none');
   svg.insertBefore(track, svg.firstChild);
+  track.setAttribute('stroke', 'none');
   const total = track.getTotalLength();
   const ys = [];
   for (let i = 0; i <= 200; i++) ys.push(track.getPointAtLength(total * i / 200));
   let stopT = null;
   function update() {
-    const r = svg.getBoundingClientRect();
+    const r = road.getBoundingClientRect();
     const scale = r.width / 400;
     let y = (innerHeight * 0.55 - r.top) / scale;
     y = Math.max(0, Math.min(1282, y));

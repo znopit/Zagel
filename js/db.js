@@ -121,8 +121,11 @@ export async function exportAll(only) {
   const out = { app: 'zagel', version: 1, exported: new Date().toISOString(), stores: {} };
   const pick = only ? SECTIONS.filter(x => only.includes(x[0])).flatMap(x => x[2]) : STORES;
   for (const s of pick) out.stores[s] = await encode(await db.all(s));
-  // shelf bay names travel with the shelf
-  if (only && only.includes('shelf')) out.stores.meta = await encode((await db.all('meta')).filter(m => m.id === 'bays'));
+  // a few settings travel with their section: shelf bay names, hand-drawn hats
+  if (only) {
+    const keep = m => (only.includes('shelf') && m.id === 'bays') || (only.includes('hat') && m.id.startsWith('hat-'));
+    out.stores.meta = await encode((await db.all('meta')).filter(keep));
+  }
   return new Blob([JSON.stringify(out)], { type: 'application/json' });
 }
 

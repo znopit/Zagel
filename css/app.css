@@ -38,14 +38,14 @@ img{display:block}
 .hero{position:relative;padding-top:12px}
 .hero{padding-top:18px}
 .hero:after{content:'';display:block;clear:both}
-.portrait{float:right;width:44%;margin:-13vw -5% 0 0;transform:rotate(5deg);position:relative;z-index:3;pointer-events:none;shape-outside:url(../img/zoi.png);shape-image-threshold:.2;shape-margin:12px}
+.portrait{float:right;width:57%;margin:-9vw -7% 0 0;transform:rotate(5deg);position:relative;z-index:3;pointer-events:none;shape-outside:url(../img/zoi.png);shape-image-threshold:.2;shape-margin:14px}
 .portrait img{width:100%}
 .big{font-family:var(--display);font-weight:600;font-size:clamp(104px,28vw,320px);line-height:.82;letter-spacing:-0.065em;position:relative;z-index:1;white-space:nowrap}
 .big .dash{display:inline-block;width:.3em;height:.068em;background:var(--ink);vertical-align:.26em;margin-left:.13em}
 .sub{position:relative;z-index:2;font-family:var(--display);font-weight:600;font-size:clamp(52px,13vw,160px);line-height:.95;letter-spacing:-0.055em;margin-top:5vw}
 .sub .g{color:#6E7279}.sub .z{color:var(--blue)}
 .lede{font-size:19px;line-height:1.45;margin-top:30px;max-width:30em}
-.homewrap .lede{max-width:62%;text-wrap:pretty}
+.homewrap .lede{text-wrap:pretty}
 .note{font-size:15px;color:var(--muted);margin-top:14px}
 .sec{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ink);padding-bottom:12px;margin-top:64px;font-family:var(--display);font-weight:500;font-size:15px;letter-spacing:0.04em;text-transform:uppercase}
 .sec.tight{margin-top:40px}
@@ -73,6 +73,8 @@ body.night.onhome .roadbox{padding-top:120px}
 .nf,.river{display:none}
 .cat{transition:transform 1s}
 #walker{pointer-events:none}
+.roadwrap{position:relative;margin-top:8px}.roadwrap .road{margin-top:0}
+.road.movers{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform}
 #walker-in{transform-box:fill-box;transform-origin:50% 100%}
 .walking #walker-in{animation:waddle .5s ease-in-out infinite alternate}
 @keyframes waddle{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
@@ -306,22 +308,25 @@ body.riso .btn.ghost{background:transparent;color:#F3EEF8;border-color:#F3EEF8}
 
 /* party hat: a balancing tower of hats */
 .tower{margin-top:34px;padding-top:30px}
-.hrow{-webkit-appearance:none;appearance:none;display:flex;align-items:center;width:100%;background:none;border:0;padding:0;text-align:left;position:relative}
-.hcol{position:relative;flex:none;width:124px;height:100%}
+.hrow{-webkit-appearance:none;appearance:none;display:grid;grid-template-columns:1fr 124px 1fr;align-items:center;width:100%;background:none;border:0;padding:0;text-align:left;position:relative}
+.hcol{position:relative;height:100%}
 .hat{position:absolute;width:76px;height:98px;transform-origin:38px 91px}
-.hat svg{width:100%;height:100%;overflow:visible}
-.hl{min-width:0;flex:1;display:block;padding:0 0 0 6px;transform:translateY(-14px)}
-.ht{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--display);font-weight:500;font-size:17px;line-height:1.2;letter-spacing:-0.02em}
-.hd{display:block;font-size:12px;color:var(--faint);margin-top:2px}
+.hat svg,.hat img{width:100%;height:100%;overflow:visible}
+.hl{min-width:0;display:block;transform:translateY(-12px)}
+.hrow.l .hl:first-child{text-align:right;padding-right:4px}
+.hrow.r .hl:first-child{grid-column:3;grid-row:1;padding-left:4px}
+.hrow.r .hcol{grid-column:2;grid-row:1}
+.ht{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--display);font-weight:500;font-size:14px;line-height:1.2;letter-spacing:-0.01em}
+.hd{display:block;font-size:11px;color:var(--faint);margin-top:2px}
 .hrow.drop .hat{animation:hatdrop .75s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes hatdrop{0%{translate:0 -160px;opacity:0}60%{opacity:1}100%{translate:0 0}}
-.ground{border-top:1px solid var(--ink);margin-top:-6px;padding-top:8px;display:flex;flex-direction:column;width:124px;align-items:center;text-align:center}
+.ground{border-top:1px solid var(--ink);margin:-6px auto 0;padding-top:8px;display:flex;flex-direction:column;width:168px;align-items:center;text-align:center}
 .ground .ld{font-size:10px;color:var(--muted);line-height:1.4}
 .ground .ldt{font-style:italic}
 .invite{background:repeating-linear-gradient(-45deg,var(--hc) 0 10px,#FBF8F0 10px 20px);padding:12px;transform:rotate(-1deg);margin:6px 4px 0}
 .iv-in{background:#FBF8F0;color:#141414;border:1px solid #141414;padding:22px 20px 20px;text-align:center}
 .iv-in .kicker{color:#57534B}
-.iv-hat{width:84px;margin:10px auto 4px}.iv-hat svg{width:100%;overflow:visible}
+.iv-hat{width:84px;margin:10px auto 4px}.iv-hat svg,.iv-hat img{width:100%;overflow:visible}
 .iv-t{font-family:var(--display);font-weight:600;font-size:clamp(28px,8vw,40px);line-height:1.05;letter-spacing:-0.04em;margin-top:6px;white-space:pre-wrap}
 .iv-d{margin-top:12px;font-size:15px}
 .iv-s{margin-top:16px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#8A857A}
@@ -330,3 +335,7 @@ body.riso .btn.ghost{background:transparent;color:#F3EEF8;border-color:#F3EEF8}
 .btn .mi{width:22px;height:10px;margin-left:4px}
 .top .mode{border-color:transparent}
 .top .mode svg{width:24px;height:24px;stroke-width:1.5}
+.drawer{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px;margin-top:16px}
+.drawer .dh{-webkit-appearance:none;appearance:none;background:none;border:0;padding:0;aspect-ratio:76/98;display:block}
+.drawer .dh svg,.drawer .dh img{width:100%;height:100%;overflow:visible}
+.drawer .mine{outline:1px dashed var(--hair);outline-offset:2px}
