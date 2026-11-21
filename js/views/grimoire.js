@@ -25,7 +25,7 @@ function art(key, night) {
   return `<svg viewBox="${vb}" aria-hidden="true">${inner}</svg>`;
 }
 
-let tab = 'spells';
+let tab = 'creatures';
 export async function render() {
   document.body.classList.add('riso');
   const spells = (await db.all('spells')).sort((a, b) => b.created - a.created);
@@ -37,15 +37,13 @@ export async function render() {
     ${pageTop()}
     ${pageTitle('Grimoire', '07', 'Book of spells · kept by Zi', '')}
     <p class="motto">Audentes fortuna iuvat.</p>
-    <div class="tabs"><button class="chip ${tab === 'spells' ? 'on' : ''}" data-tab="spells">Spells (${spells.length})</button><button class="chip ${tab === 'creatures' ? 'on' : ''}" data-tab="creatures">Creatures</button></div>
+    <div class="tabs"><button class="chip ${tab === 'creatures' ? 'on' : ''}" data-tab="creatures">Creatures</button><button class="chip ${tab === 'spells' ? 'on' : ''}" data-tab="spells">Spells (${spells.length})</button></div>
     ${tab === 'spells' ? `
       <div class="row" style="margin-top:18px"><button class="btn" id="ns">Write a spell</button></div>
-      ${spells.map(s => `<div class="spell" data-id="${s.id}">
-        <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h3>${esc(s.name)}</h3><button class="x" data-del aria-label="Delete">×</button></div>
-        <dl>${s.ingredients ? `<dt>Ingredients</dt><dd>${esc(s.ingredients)}</dd>` : ''}${s.method ? `<dt>Method</dt><dd>${esc(s.method)}</dd>` : ''}${s.effect ? `<dt>Effect</dt><dd>${esc(s.effect)}</dd>` : ''}</dl>
-        ${s.img ? `<img src="${blobURL(s.img)}" alt="">` : ''}
-        <button class="btn ghost small" data-edit style="margin-top:10px">Edit</button>
-      </div>`).join('') || '<p class="empty">No spells yet. Steal a page from the Shelf, or write one by hand.</p>'}
+      <div class="spells">${spells.map(s => `<button class="spellcard" data-id="${s.id}">
+        <span class="sth">${s.img ? `<img src="${blobURL(s.img)}" alt="">` : `<span class="noimg">${esc(s.effect || s.ingredients || '')}</span>`}</span>
+        <span class="sn">${esc(s.name)}</span></button>`).join('')}</div>
+      ${spells.length ? '' : '<p class="empty">No spells yet. Steal a page from the Shelf, or write one by hand.</p>'}
     ` : `
       <p class="note" style="margin-top:14px">Every creature on the road, by day and by night. Written down by Zi.</p>
       ${CREATURES.map(([k, name, def]) => `<div class="ccard"><div class="form">${art(k, false)}</div><div class="form n">${art(k, true)}</div>
@@ -59,15 +57,25 @@ export async function render() {
   $$('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
   if (tab === 'spells') {
     $('#ns').onclick = () => editSpell();
-    $$('.spell').forEach(el => {
-      $('[data-edit]', el).onclick = async () => editSpell(await db.get('spells', el.dataset.id));
-      $('[data-del]', el).onclick = async () => { if (await ask('Tear this spell out?', 'Tear it out', true)) { await db.del('spells', el.dataset.id); render(); } };
-    });
+    $$('.spellcard').forEach(el => el.onclick = async () => showSpell(await db.get('spells', el.dataset.id)));
   } else {
     $$('[data-lore]').forEach(b => b.onclick = () => rewrite(b.dataset.lore, lore[b.dataset.lore] || CREATURES.find(c => c[0] === b.dataset.lore)[2]));
     $('#nc').onclick = () => editCreature();
     $$('[data-cedit]').forEach(b => b.onclick = async () => editCreature(await db.get('creatures', b.dataset.cedit)));
   }
+}
+
+function showSpell(s) {
+  openSheet(`${sheetHead('Spell')}
+    <div class="spell">
+      <h3>${esc(s.name)}</h3>
+      ${s.img ? `<img src="${blobURL(s.img)}" alt="">` : ''}
+      <dl>${s.ingredients ? `<dt>Ingredients</dt><dd>${esc(s.ingredients)}</dd>` : ''}${s.method ? `<dt>Method</dt><dd>${esc(s.method)}</dd>` : ''}${s.effect ? `<dt>Effect</dt><dd>${esc(s.effect)}</dd>` : ''}</dl>
+    </div>
+    <div class="row" style="margin-top:18px"><button class="btn" id="se1">Edit</button><button class="btn danger" id="sx1">Tear it out</button></div>`, el => {
+    $('#se1', el).onclick = () => editSpell(s);
+    $('#sx1', el).onclick = async () => { if (await ask('Tear this spell out?', 'Tear it out', true)) { await db.del('spells', s.id); render(); } };
+  });
 }
 
 function editSpell(s) {

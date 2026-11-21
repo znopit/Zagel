@@ -127,7 +127,7 @@ export function daysSince(ts) { return Math.floor((Date.now() - ts) / 86400000);
 // ----- page chrome -----
 export const LOGO = `<svg viewBox="0 0 28 28" aria-hidden="true"><ellipse cx="14" cy="14" rx="12.5" ry="11" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="14" cy="15.5" rx="4" ry="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><ellipse cx="9" cy="8.5" rx="1.4" ry=".7" fill="currentColor"/><ellipse cx="20" cy="10" rx="1.4" ry=".7" fill="currentColor" transform="rotate(30 20 10)"/></svg>`;
 export function pageTop(extra = '') {
-  return `<header class="top"><a class="logo" href="#/" data-home>${LOGO} Zagel</a><div class="row" style="gap:10px;flex-wrap:nowrap">${extra}<button class="btn" type="button" data-menu>Menu <span aria-hidden="true">≡</span></button></div></header>`;
+  return `<header class="top"><a class="logo" href="#/" data-home>${LOGO} Zagel</a><div class="row" style="gap:10px;flex-wrap:nowrap">${extra}<button class="btn" type="button" data-menu>Menu <svg class="mi" viewBox="0 0 26 10" aria-hidden="true"><path d="M0 1h26M0 9h26" stroke="currentColor" stroke-width="1.6"/></svg></button></div></header>`;
 }
 // Menu follows the road.
 const MENU = [['days', 'Days'], ['hat', 'Party Hat'], ['wishes', 'Wishes'], ['looks', 'Looks'], ['cauldron', 'Cauldron'], ['shelf', 'Shelf'], ['grimoire', 'Grimoire'], ['home', 'Home']];

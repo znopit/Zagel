@@ -111,9 +111,18 @@ async function decode(v) {
   return v;
 }
 
-export async function exportAll() {
+// Sections as they appear on the road, and which drawers each one owns.
+export const SECTIONS = [
+  ['days', 'Days', ['days']], ['hat', 'Party Hat', ['parties']], ['wishes', 'Wishes', ['wishes']],
+  ['looks', 'Looks', ['looks']], ['cauldron', 'Cauldron', ['thoughts']], ['shelf', 'Shelf', ['books']],
+  ['grimoire', 'Grimoire', ['spells', 'creatures']],
+];
+export async function exportAll(only) {
   const out = { app: 'zagel', version: 1, exported: new Date().toISOString(), stores: {} };
-  for (const s of STORES) out.stores[s] = await encode(await db.all(s));
+  const pick = only ? SECTIONS.filter(x => only.includes(x[0])).flatMap(x => x[2]) : STORES;
+  for (const s of pick) out.stores[s] = await encode(await db.all(s));
+  // shelf bay names travel with the shelf
+  if (only && only.includes('shelf')) out.stores.meta = await encode((await db.all('meta')).filter(m => m.id === 'bays'));
   return new Blob([JSON.stringify(out)], { type: 'application/json' });
 }
 

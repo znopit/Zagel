@@ -1,4 +1,5 @@
-import { exportAll, importAll, setMeta } from '../db.js';
+import { exportAll, importAll, setMeta, SECTIONS, db } from '../db.js';
+import { VERSION, BUILT } from '../app.js';
 import { $, $$, toast, openSheet, closeSheet, sheetHead, shareOrDownload, pageTop, pageTitle, dayKey } from '../ui.js';
 import { setNight, resetModeToAuto, isNight } from '../app.js';
 
@@ -39,21 +40,28 @@ export async function render() {
     ${HOUSE}
     <p class="note" style="text-align:center">${usage} ${persisted ? 'Your browser has promised to keep it.' : ''}</p>
     <p class="note">Everything lives only on this device. Delete the app or clear Safari’s data and it’s gone — bottle up a backup now and then, the cats can’t help you.</p>
+    <p class="ver">Zagel v${VERSION} · ${BUILT}</p>
   </div>`;
   $$('.room').forEach(r => r.onclick = () => ROOMS[r.dataset.room]());
 }
 
-async function backup(send) {
+async function backup() {
   toast('Packing everything up…', 1500);
   const blob = await exportAll();
   await setMeta('lastBackup', Date.now());
-  await shareOrDownload(blob, `zagel-${dayKey()}.json`, send ? 'Zagel teleport' : 'Zagel backup');
+  await shareOrDownload(blob, `zagel-backup-${dayKey()}.json`, 'Zagel backup');
+}
+async function teleport(only) {
+  toast('Bottling it up…', 1500);
+  const blob = await exportAll(only);
+  const name = only.length === SECTIONS.length ? 'everything' : only.join('-');
+  await shareOrDownload(blob, `zagel-${name}-${dayKey()}.json`, 'Zagel teleport');
 }
 
 const ROOMS = {
-  backup: () => openSheet(`${sheetHead('Backup')}<p class="intro">Bottle everything up in one file — days, wishes, boards, books, photos. Keep it in Files or iCloud Drive.</p>
-    <div class="row" style="margin-top:18px"><button class="btn" id="bk">Make a backup</button></div>`, el => { $('#bk', el).onclick = () => backup(false); }),
-  restore: () => openSheet(`${sheetHead('Restore')}<p class="intro">Open a Zagel backup file. Anything new is added; anything you already have stays, unless the file has a newer version of it. Nothing gets wiped.</p>
+  backup: () => openSheet(`${sheetHead('Backup')}<p class="intro">Zagel lives only on this device. Bottle up everything — days, wishes, boards, books, photos — into one file and keep it in Files or iCloud Drive. If this phone gets lost or Safari wipes its data, Restore brings it all back.</p>
+    <div class="row" style="margin-top:18px"><button class="btn" id="bk">Make a backup</button></div>`, el => { $('#bk', el).onclick = () => backup(); }),
+  restore: () => openSheet(`${sheetHead('Restore')}<p class="intro">Open a backup or a teleported file. Anything new is added; anything you already have stays, unless the file has a newer version of it. Nothing gets wiped.</p>
     <div class="row" style="margin-top:18px"><label class="btn filebtn">Choose a backup file<input type="file" id="rf" accept="application/json,.json"></label></div>`, el => {
     $('#rf', el).onchange = async e => {
       const f = e.target.files[0]; if (!f) return;
@@ -61,8 +69,19 @@ const ROOMS = {
       catch (err) { toast(err.message || 'Couldn’t read that file.', 3200); }
     };
   }),
-  send: () => openSheet(`${sheetHead('Teleport')}<p class="intro">A teleport spell for your other iPhone or iPad. Everything gets bottled into one file and sent by AirDrop. On the other side, save it, open Zagel → Home → Restore, and pick the file. Works in every direction.</p>
-    <div class="row" style="margin-top:18px"><button class="btn" id="sd">Cast it</button></div>`, el => { $('#sd', el).onclick = () => backup(true); }),
+  send: async () => {
+    const counts = {};
+    for (const [k, , stores] of SECTIONS) { let n = 0; for (const st of stores) n += (await db.all(st)).filter(r => !r.builtin).length; counts[k] = n; }
+    openSheet(`${sheetHead('Teleport')}<p class="intro">A teleport spell for your other iPhone or iPad. Pick what goes through, cast it, and AirDrop the file. On the other side: save it, open Zagel → Home → Restore, pick the file. Nothing there gets wiped.</p>
+      <div class="row" style="margin-top:16px">${SECTIONS.map(([k, t]) => `<button class="chip on" data-s="${k}">${t} <small>${counts[k]}</small></button>`).join('')}</div>
+      <div class="row" style="margin-top:18px"><button class="btn" id="sd">Cast it</button><button class="btn ghost small" id="sall">None</button></div>`, el => {
+      const chips = $$('[data-s]', el);
+      chips.forEach(c => c.onclick = () => { c.classList.toggle('on'); sync(); });
+      const sync = () => { const any = chips.some(c => c.classList.contains('on')); $('#sall', el).textContent = any ? 'None' : 'All'; $('#sd', el).disabled = !any; $('#sd', el).style.opacity = any ? 1 : .35; };
+      $('#sall', el).onclick = () => { const any = chips.some(c => c.classList.contains('on')); chips.forEach(c => c.classList.toggle('on', !any)); sync(); };
+      $('#sd', el).onclick = () => teleport(chips.filter(c => c.classList.contains('on')).map(c => c.dataset.s));
+    });
+  },
   night: () => {
     let saved = null; try { saved = localStorage.getItem('zagel-mode'); } catch (e) {}
     const cur = saved || 'auto';

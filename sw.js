@@ -1,5 +1,5 @@
 // Zagel service worker: keeps the app itself offline. Your data lives in IndexedDB, not here.
-const VERSION = 'zagel-v6';
+const VERSION = 'zagel-v7';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/db.js', 'js/art.js', 'js/ui.js', 'js/home.js',

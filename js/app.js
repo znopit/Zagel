@@ -2,6 +2,10 @@ import { DEFS } from './art.js';
 import { closeSheet, openMenu } from './ui.js';
 import { renderHome } from './home.js';
 
+// Bump together with VERSION in sw.js.
+export const VERSION = '7';
+export const BUILT = '21 Nov 2026';
+
 document.getElementById('defs').innerHTML = DEFS;
 
 // ----- day / night -----

@@ -14,8 +14,8 @@ export async function renderHome() {
     ${pageTop(MODE_BTN)}
     <div class="homegrid">
       <section class="hero">
-        <div class="portrait"><img src="img/zoi.png" alt="Zoi's self-portrait: blue hair, yellow party hat with two cats"></div>
         <div class="big">Zagel<span class="dash"></span></div>
+        <img class="portrait" src="img/zoi.png" alt="Zoi's self-portrait: blue hair, yellow party hat with two cats">
         <div class="sub"><span class="g">about</span> <span class="z">Zoi</span></div>
         <p class="lede">One day, Zoi the witch put everything on a bagel and walked down the witches’ road.</p>
         <p class="note">Kept offline, on this device.</p>
