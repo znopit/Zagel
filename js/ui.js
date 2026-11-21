@@ -86,25 +86,22 @@ export function blobURL(b) {
   if (!urlCache.has(b)) urlCache.set(b, URL.createObjectURL(b));
   return urlCache.get(b);
 }
-// Average-ish colour of a picture, nudged so it reads as a book spine.
+// The colour that covers the most of a picture (biggest area wins, not the loudest).
 export async function dominantColor(blob) {
   const img = await loadImage(blob);
-  const c = document.createElement('canvas'); c.width = 24; c.height = 24;
-  const x = c.getContext('2d'); x.drawImage(img, 0, 0, 24, 24);
-  const d = x.getImageData(0, 0, 24, 24).data;
+  const c = document.createElement('canvas'); c.width = 40; c.height = 40;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, 40, 40);
+  const d = x.getImageData(0, 0, 40, 40).data;
   const buckets = {};
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i + 1], b = d[i + 2];
-    const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-    const sat = mx === 0 ? 0 : (mx - mn) / mx;
-    const key = [r >> 5, g >> 5, b >> 5].join(',');
-    buckets[key] = buckets[key] || { n: 0, r: 0, g: 0, b: 0, w: 0 };
-    const w = 1 + sat * 3;
-    Object.assign(buckets[key], { n: buckets[key].n + 1, r: buckets[key].r + r * w, g: buckets[key].g + g * w, b: buckets[key].b + b * w, w: buckets[key].w + w });
+    const key = (r >> 5) + ',' + (g >> 5) + ',' + (b >> 5);
+    const k = buckets[key] || (buckets[key] = { n: 0, r: 0, g: 0, b: 0 });
+    k.n++; k.r += r; k.g += g; k.b += b;
   }
-  const best = Object.values(buckets).sort((a, b) => b.w - a.w)[0];
+  const best = Object.values(buckets).sort((a, b) => b.n - a.n)[0];
   const hex = v => Math.round(v).toString(16).padStart(2, '0');
-  return '#' + hex(best.r / best.w) + hex(best.g / best.w) + hex(best.b / best.w);
+  return '#' + hex(best.r / best.n) + hex(best.g / best.n) + hex(best.b / best.n);
 }
 export function hue(hexc) {
   const n = parseInt(hexc.slice(1), 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;

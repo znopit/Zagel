@@ -45,7 +45,7 @@ function addBook(bays) {
   let cover = null, color = '#C9B9A0';
   openSheet(`${sheetHead('Add a book')}
     <div class="stack">
-      <label class="btn ghost filebtn">Photo of the cover<input type="file" id="bc" accept="image/*" capture="environment"></label>
+      <label class="btn ghost filebtn">Photo of the cover<input type="file" id="bc" accept="image/*"></label>
       <div class="row"><div id="bsw" style="width:28px;height:44px;border:1px solid #141414;background:${color}"></div><span class="muted" style="font-size:14px" id="bcn">No photo yet — the spine will be plain.</span></div>
       <input class="field" id="bt" placeholder="Title" maxlength="80">
       <select class="field" id="bb">${bays.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select>
@@ -93,7 +93,7 @@ async function showBook(id, bays, kicker) {
     ${b.stolen && b.stolen.img ? `<img src="${blobURL(b.stolen.img)}" alt="" style="max-width:100%;margin-top:12px">` : ''}
     ${b.stolen && b.stolen.note ? `<p class="intro">${esc(b.stolen.note)}</p>` : ''}
     <div class="stack" style="margin-top:12px">
-      <label class="btn ghost filebtn">${b.stolen && b.stolen.img ? 'Replace the photo' : 'Photo of the page'}<input type="file" id="sp" accept="image/*" capture="environment"></label>
+      <label class="btn ghost filebtn">${b.stolen && b.stolen.img ? 'Replace the photo' : 'Photo of the page'}<input type="file" id="sp" accept="image/*"></label>
       <textarea class="field" id="sn" rows="2" placeholder="Why this page?">${esc(b.stolen?.note || '')}</textarea>
       <div class="row"><button class="btn" id="ssave">Keep it</button>${b.stolen ? '<button class="btn ghost" id="tog">Copy into the Grimoire</button>' : ''}</div>
     </div>

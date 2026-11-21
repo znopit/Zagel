@@ -17,8 +17,8 @@ export async function renderHome() {
         <div class="portrait"><img src="img/zoi.png" alt="Zoi's self-portrait: blue hair, yellow party hat with two cats"></div>
         <div class="big">Zagel<span class="dash"></span></div>
         <div class="sub"><span class="g">about</span> <span class="z">Zoi</span></div>
-        <p class="lede">One day, Zoi the witch put everything on a bagel — her days, her wishes, her loose thoughts, two cats and a shelf of unread books — and set off down the witches’ road.</p>
-        <p class="note">Kept offline, on this device. Nobody else was invited.</p>
+        <p class="lede">One day, Zoi the witch put everything on a bagel and walked down the witches’ road.</p>
+        <p class="note">Kept offline, on this device.</p>
       </section>
       <div class="roadcol">
         <div class="sec"><span>Down the road</span><span>(07)</span></div>
