@@ -75,6 +75,18 @@ window.addEventListener('scroll', () => { if (!location.hash || location.hash ==
 
 // ----- offline + storage -----
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => {
+    r.update().catch(() => {});
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') r.update().catch(() => {}); });
+  }).catch(() => {});
+  // when a new version takes over, reload once so you see it right away (your data is untouched)
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    const busy = document.querySelector('.studio') || document.body.classList.contains('sheet-open');
+    if (busy) return;
+    reloaded = true; location.reload();
+  });
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});

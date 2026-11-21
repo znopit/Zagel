@@ -1,5 +1,5 @@
 // Zagel service worker: keeps the app itself offline. Your data lives in IndexedDB, not here.
-const VERSION = 'zagel-v5';
+const VERSION = 'zagel-v6';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
   'js/app.js', 'js/db.js', 'js/art.js', 'js/ui.js', 'js/home.js',
@@ -14,14 +14,23 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+// Network first: with a connection you always get the newest Zagel straight away;
+// offline (or on a very slow connection) the saved copy opens instead.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); }
+  e.respondWith((async () => {
+    const cache = await caches.open(VERSION);
+    try {
+      const net = fetch(e.request, { cache: 'no-cache' });
+      const res = await Promise.race([net, new Promise((_, rej) => setTimeout(() => rej('slow'), 4000))]);
+      if (res && res.ok) cache.put(e.request, res.clone());
       return res;
-    }).catch(() => caches.match('index.html')))
-  );
+    } catch (err) {
+      const hit = await caches.match(e.request, { ignoreSearch: true });
+      if (hit) return hit;
+      try { return await fetch(e.request); } catch (e2) { return caches.match('index.html'); }
+    }
+  })());
 });
